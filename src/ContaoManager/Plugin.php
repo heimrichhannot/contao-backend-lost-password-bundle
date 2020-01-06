@@ -24,6 +24,6 @@ class Plugin implements BundlePluginInterface, ConfigPluginInterface
 
     public function registerContainerConfiguration(LoaderInterface $loader, array $managerConfig)
     {
-        $loader->load('@ContaoEventRegistrationBundle/Resources/config/services.yml');
+        $loader->load('@ContaoBackendLostPasswordBundle/Resources/config/services.yml');
     }
 }

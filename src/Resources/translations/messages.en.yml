@@ -1,0 +1,28 @@
+bhyp.content.more.title.page: "Visit page: %title%"
+bhyp.content.more.link.default: "More"
+bhyp.content.claim: "A partnership built on trust"
+
+bhyp.news.reference.assetclass: Assetclass
+bhyp.news.reference.customer: Customer
+bhyp.news.reference.financeType: Type of finance
+bhyp.news.reference.financeCapacity: capacity of finance
+bhyp.news.reference.bhypFunction: function of Berlin Hyp
+bhyp.news.reference.financeDuration: duration of finance
+
+bhyp.news.awards.date: Date of Awarding
+bhyp.news.awards.institution: Awarding Institution
+bhyp.news.awards.area: Awarded Section/ Division
+bhyp.news.awards.reason: Reasons for Awarding
+
+bhyp.member.contact.multiple: Your contact partners
+bhyp.member.contact.female: Your contact partner
+bhyp.member.contact.male: Your contact partner
+bhyp.member.contact.download: "short profile as PDF"
+bhyp.member.contact.ci: curriculum vitae
+bhyp.member.contact.responsibleFor: Responsible for
+
+bhyp.newsroom.archive: Proceed to archive
+bhyp.newsroom.more: "More"
+
+huh.list.labels.overview.newsroom: All news
+huh.list.labels.overview.referenceProjects: All reference projects
