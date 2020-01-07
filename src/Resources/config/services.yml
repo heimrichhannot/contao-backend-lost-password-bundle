@@ -3,4 +3,5 @@ services:
     public: true
     autowire: true
 
+  HeimrichHannot\BackendLostPasswordBundle\Controller\BackendController: ~
   HeimrichHannot\BackendLostPasswordBundle\Manager\BackendLostPasswordManager: ~
