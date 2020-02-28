@@ -4,7 +4,7 @@ namespace HeimrichHannot\BackendLostPasswordBundle\Manager;
 
 use Contao\Environment;
 use HeimrichHannot\UtilsBundle\Container\ContainerUtil;
-use Symfony\Component\Routing\Router;
+use Symfony\Component\Routing\RouterInterface;
 
 class BackendLostPasswordManager {
     /**
@@ -12,7 +12,7 @@ class BackendLostPasswordManager {
      */
     private $twig;
     /**
-     * @var Router
+     * @var RouterInterface
      */
     private $router;
     /**
@@ -20,7 +20,7 @@ class BackendLostPasswordManager {
      */
     private $containerUtil;
 
-    public function __construct(\Twig_Environment $twig, Router $router, ContainerUtil $containerUtil) {
+    public function __construct(\Twig_Environment $twig, RouterInterface $router, ContainerUtil $containerUtil) {
 
         $this->twig = $twig;
         $this->router = $router;

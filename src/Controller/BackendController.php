@@ -26,7 +26,7 @@ use HeimrichHannot\UtilsBundle\Url\UrlUtil;
 use Patchwork\Utf8;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Routing\Router;
+use Symfony\Component\Routing\RouterInterface;
 
 /**
  * @Route(defaults={"_scope" = "backend", "_token_check" = true})
@@ -49,7 +49,7 @@ class BackendController
     private $containerUtil;
 
     /**
-     * @var Router
+     * @var RouterInterface
      */
     private $router;
 
@@ -74,7 +74,7 @@ class BackendController
         ModelUtil $modelUtil,
         UrlUtil $urlUtil,
         ContaoFramework $framework,
-        Router $router,
+        RouterInterface $router,
         \Swift_Mailer $mailer
     ) {
         $this->dcaUtil       = $dcaUtil;

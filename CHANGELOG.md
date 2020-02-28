@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2019-02-28
+
+- fixes for Contao 4.9
+
 ## [1.1.0] - 2019-01-07
 
 - added English translation
