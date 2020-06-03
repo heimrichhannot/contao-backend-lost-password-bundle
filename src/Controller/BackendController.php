@@ -95,12 +95,11 @@ class BackendController
      */
     public function requestPasswordAction()
     {
-        $email2UsernameActive = $this->containerUtil->isBundleActive('HeimrichHannot\Email2UsernameBundle\ContaoEmail2UsernameBundle');
-
         $this->framework->initialize();
 
         $this->dcaUtil->loadLanguageFile('default');
         $this->dcaUtil->loadLanguageFile('modules');
+        $this->dcaUtil->loadLanguageFile('tl_user');
 
         Controller::setStaticUrls();
 
@@ -115,12 +114,12 @@ class BackendController
         $template->charset      = \Config::get('characterSet');
         $template->action       = ampersand(\Environment::get('request'));
         $template->headline     = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['request'];
-        $template->explain      = $GLOBALS['TL_LANG']['MSC']['backendLostPassword'][$email2UsernameActive ? 'requestExplanationEmail' : 'requestExplanation'];
+        $template->explain      = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestExplanationEmail'];
         $template->submitButton = \StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue']);
-        $template->username     = $GLOBALS['TL_LANG']['tl_user']['username'][0];
+        $template->username     = $GLOBALS['TL_LANG']['tl_user']['email'][0];
 
         if (Input::post('FORM_SUBMIT') == 'tl_request_password' && ($username = Input::post('username'))) {
-            if (null !== ($user = $this->modelUtil->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.username)=?'], [strtolower($username)])) && $user->email) {
+            if (null !== ($user = $this->modelUtil->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.email)=?'], [strtolower($username)])) && $user->email) {
                 $token      = 'PW' . substr(md5(uniqid(mt_rand(), true)), 2);
                 $resetRoute = $this->router->getRouteCollection()->get('contao_backend_reset_password');
 
@@ -144,7 +143,7 @@ class BackendController
             }
 
             $template->headline       = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['thankYou'];
-            $template->successMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword'][$email2UsernameActive ? 'requestLinkSentEmail' : 'requestLinkSent'];
+            $template->successMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestLinkSentEmail'];
             $template->spamNote       = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['spamNote'];
 
             return $template->getResponse();
