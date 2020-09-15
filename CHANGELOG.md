@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2020-09-15
+
+- changed the mail transport from swift mailer to contao's email class
+
 ## [1.2.1] - 2020-06-03
 
 - fixed email vs. username issues

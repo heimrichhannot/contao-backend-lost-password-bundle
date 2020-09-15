@@ -15,6 +15,7 @@ use Contao\Config;
 use Contao\Controller;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\DC_Table;
+use Contao\Email;
 use Contao\Environment;
 use Contao\Input;
 use Contao\Message;
@@ -63,19 +64,13 @@ class BackendController
      */
     private $urlUtil;
 
-    /**
-     * @var \Swift_Mailer
-     */
-    private $mailer;
-
     public function __construct(
         DcaUtil $dcaUtil,
         ContainerUtil $containerUtil,
         ModelUtil $modelUtil,
         UrlUtil $urlUtil,
         ContaoFramework $framework,
-        RouterInterface $router,
-        \Swift_Mailer $mailer
+        RouterInterface $router
     ) {
         $this->dcaUtil       = $dcaUtil;
         $this->framework     = $framework;
@@ -83,7 +78,6 @@ class BackendController
         $this->router        = $router;
         $this->modelUtil     = $modelUtil;
         $this->urlUtil       = $urlUtil;
-        $this->mailer        = $mailer;
     }
 
     /**
@@ -129,17 +123,14 @@ class BackendController
                 $user->backendLostPasswordActivation = $token;
                 $user->save();
 
-                /** @var \Swift_Mime_SimpleMessage $message */
-                $message = $this->mailer->createMessage();
+                $message = new Email();
 
-                $message->setFrom([Config::get('adminEmail') => Config::get('websiteTitle') ?: Config::get('adminEmail')]);
-                $message->setTo([$user->email => $user->name ?: $user->email]);
-                $message->setSubject($GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageSubjectResetPassword']);
-                $message->setBody(
-                    str_replace('##reset_url##', $resetUrl, $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageBodyResetPassword'])
-                );
+                $message->from = Config::get('adminEmail');
+                $message->fromName = Config::get('websiteTitle');
+                $message->subject = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageSubjectResetPassword'];
+                $message->text = str_replace('##reset_url##', $resetUrl, $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageBodyResetPassword']);
 
-                $this->mailer->send($message);
+                $message->sendTo($user->email);
             }
 
             $template->headline       = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['thankYou'];
