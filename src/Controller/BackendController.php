@@ -117,7 +117,12 @@ class BackendController
                 $token      = 'PW' . substr(md5(uniqid(mt_rand(), true)), 2);
                 $resetRoute = $this->router->getRouteCollection()->get('contao_backend_reset_password');
 
-                $resetUrl = Environment::get('url') . ($this->containerUtil->isDev() ? '/app_dev.php' : '') . $resetRoute->getPath();
+                if (version_compare(VERSION, '4.9', '<')) {
+                    $resetUrl = Environment::get('url') . ($this->containerUtil->isDev() ? '/app_dev.php' : '') . $resetRoute->getPath();
+                } else {
+                    $resetUrl = Environment::get('url') . $resetRoute->getPath();
+                }
+
                 $resetUrl = $this->urlUtil->addQueryString('token=' . $token, $resetUrl);
 
                 $user->backendLostPasswordActivation = $token;

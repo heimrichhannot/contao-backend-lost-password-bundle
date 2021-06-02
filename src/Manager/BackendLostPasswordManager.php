@@ -31,7 +31,11 @@ class BackendLostPasswordManager {
     {
         $requestRoute = $this->router->getRouteCollection()->get('contao_backend_request_password');
 
-        $requestUrl = Environment::get('url') . ($this->containerUtil->isDev() ? '/app_dev.php' : '') . $requestRoute->getPath();
+        if (version_compare(VERSION, '4.9', '<')) {
+            $requestUrl = Environment::get('url') . ($this->containerUtil->isDev() ? '/app_dev.php' : '') . $requestRoute->getPath();
+        } else {
+            $requestUrl = Environment::get('url') . $requestRoute->getPath();
+        }
 
         return $this->twig->render(
             '@ContaoBackendLostPassword/link_lost_password.html.twig', [
