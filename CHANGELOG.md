@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2021-07-26
+- Added: option to add forgot password link automatically
+
 ## [1.3.1] - 2021-06-02
 
 - changes for contao 4.9+
