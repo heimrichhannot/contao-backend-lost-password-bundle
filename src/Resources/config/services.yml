@@ -2,6 +2,11 @@ services:
   _defaults:
     public: true
     autowire: true
+    bind:
+      $bundleConfig: "%huh_backend_lost_password%"
 
   HeimrichHannot\BackendLostPasswordBundle\Controller\BackendController: ~
   HeimrichHannot\BackendLostPasswordBundle\Manager\BackendLostPasswordManager: ~
+
+  HeimrichHannot\BackendLostPasswordBundle\EventListener\:
+    resource: '../../EventListener/*'
