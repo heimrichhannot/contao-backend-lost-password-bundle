@@ -2,8 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - 2021-07-26
+## [1.4.0] - 2021-07-27
 - Added: option to add forgot password link automatically
+- Added: template option to BackendLostPasswordManager::getLostPasswordLink()
+- Added: license file
+- Changed: removed some deprecations
 
 ## [1.3.1] - 2021-06-02
 
