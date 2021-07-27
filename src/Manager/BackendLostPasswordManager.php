@@ -15,7 +15,8 @@ use Twig\Environment as TwigEnvironment;
 
 class BackendLostPasswordManager
 {
-    protected Utils $utils;
+    /** @var Utils */
+    protected $utils;
     /**
      * @var TwigEnvironment
      */

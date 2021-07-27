@@ -13,8 +13,10 @@ use HeimrichHannot\BackendLostPasswordBundle\Manager\BackendLostPasswordManager;
 
 class ParseTemplateListener
 {
-    protected BackendLostPasswordManager $backendLostPasswordManager;
-    protected array $bundleConfig;
+    /** @var BackendLostPasswordManager */
+    protected $backendLostPasswordManager;
+    /** @var array */
+    protected $bundleConfig;
 
     /**
      * ParseTemplateListener constructor.
@@ -28,9 +30,9 @@ class ParseTemplateListener
     public function __invoke(Template $template): void
     {
         if (true === $this->bundleConfig['add_to_template'] && 'be_login' === $template->getName()) {
-            $template->messages = ($template->messages ?? '').$this->backendLostPasswordManager->getLostPasswordLink([
+            $template->messages = $this->backendLostPasswordManager->getLostPasswordLink([
                 'template' => '@ContaoBackendLostPassword/be_lost_password_link_main.html.twig',
-            ]);
+            ]).($template->messages ?? '');
         }
     }
 }

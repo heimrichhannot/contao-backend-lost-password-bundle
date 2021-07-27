@@ -1,15 +1,14 @@
 <?php
 
 /*
- * This file is part of Contao.
- *
- * (c) Leo Feyer
+ * Copyright (c) 2021 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
 
 namespace HeimrichHannot\BackendLostPasswordBundle\Controller;
 
+use Contao\Backend;
 use Contao\BackendTemplate;
 use Contao\Config;
 use Contao\Controller;
@@ -19,11 +18,12 @@ use Contao\Email;
 use Contao\Environment;
 use Contao\Input;
 use Contao\Message;
+use Contao\StringUtil;
 use Contao\System;
-use HeimrichHannot\UtilsBundle\Container\ContainerUtil;
 use HeimrichHannot\UtilsBundle\Dca\DcaUtil;
 use HeimrichHannot\UtilsBundle\Model\ModelUtil;
 use HeimrichHannot\UtilsBundle\Url\UrlUtil;
+use HeimrichHannot\UtilsBundle\Util\Utils;
 use Patchwork\Utf8;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -35,6 +35,10 @@ use Symfony\Component\Routing\RouterInterface;
 class BackendController
 {
     /**
+     * @var Utils
+     */
+    protected $utils;
+    /**
      * @var DcaUtil
      */
     private $dcaUtil;
@@ -43,11 +47,6 @@ class BackendController
      * @var ContaoFramework
      */
     private $framework;
-
-    /**
-     * @var ContainerUtil
-     */
-    private $containerUtil;
 
     /**
      * @var RouterInterface
@@ -66,18 +65,18 @@ class BackendController
 
     public function __construct(
         DcaUtil $dcaUtil,
-        ContainerUtil $containerUtil,
         ModelUtil $modelUtil,
         UrlUtil $urlUtil,
         ContaoFramework $framework,
-        RouterInterface $router
+        RouterInterface $router,
+        Utils $utils
     ) {
-        $this->dcaUtil       = $dcaUtil;
-        $this->framework     = $framework;
-        $this->containerUtil = $containerUtil;
-        $this->router        = $router;
-        $this->modelUtil     = $modelUtil;
-        $this->urlUtil       = $urlUtil;
+        $this->dcaUtil = $dcaUtil;
+        $this->framework = $framework;
+        $this->router = $router;
+        $this->modelUtil = $modelUtil;
+        $this->urlUtil = $urlUtil;
+        $this->utils = $utils;
     }
 
     /**
@@ -100,30 +99,30 @@ class BackendController
         /** @var BackendTemplate|object $template */
         $template = new BackendTemplate('be_request_password');
 
-        $template->theme        = \Backend::getTheme();
-        $template->messages     = \Message::generate();
-        $template->base         = \Environment::get('base');
-        $template->language     = $GLOBALS['TL_LANGUAGE'];
-        $template->title        = \StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pw_new']);
-        $template->charset      = \Config::get('characterSet');
-        $template->action       = ampersand(\Environment::get('request'));
-        $template->headline     = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['request'];
-        $template->explain      = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestExplanationEmail'];
-        $template->submitButton = \StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue']);
-        $template->username     = $GLOBALS['TL_LANG']['tl_user']['email'][0];
+        $template->theme = Backend::getTheme();
+        $template->messages = Message::generate();
+        $template->base = Environment::get('base');
+        $template->language = $GLOBALS['TL_LANGUAGE'];
+        $template->title = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pw_new']);
+        $template->charset = Config::get('characterSet');
+        $template->action = ampersand(Environment::get('request'));
+        $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['request'];
+        $template->explain = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestExplanationEmail'];
+        $template->submitButton = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue']);
+        $template->username = $GLOBALS['TL_LANG']['tl_user']['email'][0];
 
-        if (Input::post('FORM_SUBMIT') == 'tl_request_password' && ($username = Input::post('username'))) {
+        if ('tl_request_password' == Input::post('FORM_SUBMIT') && ($username = Input::post('username'))) {
             if (null !== ($user = $this->modelUtil->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.email)=?'], [strtolower($username)])) && $user->email) {
-                $token      = 'PW' . substr(md5(uniqid(mt_rand(), true)), 2);
+                $token = 'PW'.substr(md5(uniqid(mt_rand(), true)), 2);
                 $resetRoute = $this->router->getRouteCollection()->get('contao_backend_reset_password');
 
                 if (version_compare(VERSION, '4.9', '<')) {
-                    $resetUrl = Environment::get('url') . ($this->containerUtil->isDev() ? '/app_dev.php' : '') . $resetRoute->getPath();
+                    $resetUrl = Environment::get('url').($this->utils->container()->isDev() ? '/app_dev.php' : '').$resetRoute->getPath();
                 } else {
-                    $resetUrl = Environment::get('url') . $resetRoute->getPath();
+                    $resetUrl = Environment::get('url').$resetRoute->getPath();
                 }
 
-                $resetUrl = $this->urlUtil->addQueryString('token=' . $token, $resetUrl);
+                $resetUrl = $this->urlUtil->addQueryString('token='.$token, $resetUrl);
 
                 $user->backendLostPasswordActivation = $token;
                 $user->save();
@@ -138,9 +137,9 @@ class BackendController
                 $message->sendTo($user->email);
             }
 
-            $template->headline       = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['thankYou'];
+            $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['thankYou'];
             $template->successMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestLinkSentEmail'];
-            $template->spamNote       = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['spamNote'];
+            $template->spamNote = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['spamNote'];
 
             return $template->getResponse();
         }
@@ -157,7 +156,7 @@ class BackendController
      */
     public function resetPasswordAction()
     {
-        $request = $this->containerUtil->getCurrentRequest();
+        $request = $this->utils->container()->getCurrentRequest();
 
         $this->framework->initialize();
 
@@ -169,20 +168,20 @@ class BackendController
         /** @var BackendTemplate|object $template */
         $template = new BackendTemplate('be_reset_password');
 
-        $template->theme        = \Backend::getTheme();
-        $template->messages     = \Message::generate();
-        $template->base         = \Environment::get('base');
-        $template->language     = $GLOBALS['TL_LANGUAGE'];
-        $template->title        = \StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pw_new']);
-        $template->charset      = \Config::get('characterSet');
-        $template->action       = ampersand(\Environment::get('request'));
-        $template->headline     = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['reset'];
-        $template->explain      = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetExplanation'];
-        $template->submitButton = \StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue']);
-        $template->password      = $GLOBALS['TL_LANG']['MSC']['password'][0];
-        $template->confirm      = $GLOBALS['TL_LANG']['MSC']['confirm'][0];
+        $template->theme = Backend::getTheme();
+        $template->messages = Message::generate();
+        $template->base = Environment::get('base');
+        $template->language = $GLOBALS['TL_LANGUAGE'];
+        $template->title = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pw_new']);
+        $template->charset = Config::get('characterSet');
+        $template->action = ampersand(Environment::get('request'));
+        $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['reset'];
+        $template->explain = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetExplanation'];
+        $template->submitButton = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue']);
+        $template->password = $GLOBALS['TL_LANG']['MSC']['password'][0];
+        $template->confirm = $GLOBALS['TL_LANG']['MSC']['confirm'][0];
 
-        if (!($token = $request->query->get('token')) || strncmp($token, 'PW', 2) !== 0) {
+        if (!($token = $request->query->get('token')) || 0 !== strncmp($token, 'PW', 2)) {
             $template->errorMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetErrorExplanation'];
 
             return $template->getResponse();
@@ -194,40 +193,28 @@ class BackendController
             return $template->getResponse();
         }
 
-        if ($request->request->get('FORM_SUBMIT') == 'tl_reset_password') {
+        if ('tl_reset_password' == $request->request->get('FORM_SUBMIT')) {
             $password = $request->request->get('password');
             $confirm = $request->request->get('confirm');
 
-            if ($password !== $confirm)
-            {
+            if ($password !== $confirm) {
                 Message::addError($GLOBALS['TL_LANG']['ERR']['passwordMatch']);
-            }
-            elseif (Utf8::strlen($password) < Config::get('minPasswordLength'))
-            {
+            } elseif (Utf8::strlen($password) < Config::get('minPasswordLength')) {
                 Message::addError(sprintf($GLOBALS['TL_LANG']['ERR']['passwordLength'], Config::get('minPasswordLength')));
-            }
-            elseif ($password == $user->username)
-            {
+            } elseif ($password == $user->username) {
                 Message::addError($GLOBALS['TL_LANG']['ERR']['passwordName']);
-            }
-            else
-            {
+            } else {
                 $this->dcaUtil->loadDc('tl_user');
 
-                if (\is_array($GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback']))
-                {
+                if (\is_array($GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'])) {
                     $dc = new DC_Table('tl_user');
                     $dc->id = $user->id;
 
-                    foreach ($GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'] as $callback)
-                    {
-                        if (\is_array($callback))
-                        {
+                    foreach ($GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'] as $callback) {
+                        if (\is_array($callback)) {
                             $callbackObj = System::importStatic($callback[0]);
                             $password = $callbackObj->{$callback[1]}($password, $dc);
-                        }
-                        elseif (\is_callable($callback))
-                        {
+                        } elseif (\is_callable($callback)) {
                             $password = $callback($password, $dc);
                         }
                     }
