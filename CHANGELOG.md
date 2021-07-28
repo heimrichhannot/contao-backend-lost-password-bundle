@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - 2021-07-28
+- Fixed: UndefinedMethodError in BackendController
+
 ## [1.4.0] - 2021-07-27
 - Added: option to add forgot password link automatically
 - Added: template option to BackendLostPasswordManager::getLostPasswordLink()

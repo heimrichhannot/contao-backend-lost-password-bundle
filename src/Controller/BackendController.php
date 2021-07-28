@@ -25,6 +25,7 @@ use HeimrichHannot\UtilsBundle\Model\ModelUtil;
 use HeimrichHannot\UtilsBundle\Url\UrlUtil;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use Patchwork\Utf8;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\RouterInterface;
@@ -38,6 +39,7 @@ class BackendController
      * @var Utils
      */
     protected $utils;
+    protected RequestStack $requestStack;
     /**
      * @var DcaUtil
      */
@@ -69,7 +71,8 @@ class BackendController
         UrlUtil $urlUtil,
         ContaoFramework $framework,
         RouterInterface $router,
-        Utils $utils
+        Utils $utils,
+        RequestStack $requestStack
     ) {
         $this->dcaUtil = $dcaUtil;
         $this->framework = $framework;
@@ -77,6 +80,7 @@ class BackendController
         $this->modelUtil = $modelUtil;
         $this->urlUtil = $urlUtil;
         $this->utils = $utils;
+        $this->requestStack = $requestStack;
     }
 
     /**
@@ -156,7 +160,7 @@ class BackendController
      */
     public function resetPasswordAction()
     {
-        $request = $this->utils->container()->getCurrentRequest();
+        $request = $this->requestStack->getCurrentRequest();
 
         $this->framework->initialize();
 
