@@ -16,6 +16,7 @@ use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\DC_Table;
 use Contao\Email;
 use Contao\Environment;
+use Contao\Idna;
 use Contao\Input;
 use Contao\Message;
 use Contao\StringUtil;
@@ -39,7 +40,11 @@ class BackendController
      * @var Utils
      */
     protected $utils;
-    protected RequestStack $requestStack;
+    protected $requestStack;
+    /**
+     * @var array
+     */
+    protected $bundleConfig;
     /**
      * @var DcaUtil
      */
@@ -66,6 +71,7 @@ class BackendController
     private $urlUtil;
 
     public function __construct(
+        array $bundleConfig,
         DcaUtil $dcaUtil,
         ModelUtil $modelUtil,
         UrlUtil $urlUtil,
@@ -81,6 +87,7 @@ class BackendController
         $this->urlUtil = $urlUtil;
         $this->utils = $utils;
         $this->requestStack = $requestStack;
+        $this->bundleConfig = $bundleConfig;
     }
 
     /**
@@ -113,10 +120,11 @@ class BackendController
         $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['request'];
         $template->explain = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestExplanationEmail'];
         $template->submitButton = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue']);
-        $template->username = $GLOBALS['TL_LANG']['tl_user']['email'][0];
+        $template->username = $GLOBALS['TL_LANG']['tl_user']['email'][0].'/'.$GLOBALS['TL_LANG']['tl_user']['username'][0];
 
         if ('tl_request_password' == Input::post('FORM_SUBMIT') && ($username = Input::post('username'))) {
-            if (null !== ($user = $this->modelUtil->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.email)=?'], [strtolower($username)])) && $user->email) {
+            if ((null !== ($user = $this->modelUtil->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.email)=?'], [strtolower($username)])) ||
+                    null !== ($user = $this->modelUtil->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.username)=?'], [strtolower($username)]))) && $user->email) {
                 $token = 'PW'.substr(md5(uniqid(mt_rand(), true)), 2);
                 $resetRoute = $this->router->getRouteCollection()->get('contao_backend_reset_password');
 
@@ -131,14 +139,37 @@ class BackendController
                 $user->backendLostPasswordActivation = $token;
                 $user->save();
 
-                $message = new Email();
+                $notification = $this->bundleConfig['nc_notification'] ?? 0;
 
-                $message->from = Config::get('adminEmail');
-                $message->fromName = Config::get('websiteTitle');
-                $message->subject = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageSubjectResetPassword'];
-                $message->text = str_replace('##reset_url##', $resetUrl, $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageBodyResetPassword']);
+                if ($notification && class_exists('NotificationCenter\Model\Notification')) {
+                    $notification = \NotificationCenter\Model\Notification::findByPk($notification);
 
-                $message->sendTo($user->email);
+                    if (null !== $notification) {
+                        $tokens = [];
+
+                        // Add user tokens
+                        foreach ($user->row() as $k => $v) {
+                            $tokens['user_'.$k] = $v;
+                        }
+
+                        $tokens['recipient_email'] = $user->email;
+                        $tokens['domain'] = Idna::decode(Environment::get('host'));
+                        $tokens['link'] = $resetUrl;
+
+                        $notification->send($tokens, $GLOBALS['TL_LANGUAGE']);
+                    }
+                } else {
+                    $message = new Email();
+
+                    $message->from = Config::get('adminEmail');
+                    $message->fromName = Config::get('websiteTitle');
+                    $message->subject = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageSubjectResetPassword'];
+                    $message->text = str_replace('##reset_url##', $resetUrl, $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageBodyResetPassword']);
+
+                    $message->sendTo($user->email);
+                }
+
+                Controller::log('A new password has been requested for backend user ID '.$user->id.' ('.$username->email.')', __METHOD__, TL_ACCESS);
             }
 
             $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['thankYou'];

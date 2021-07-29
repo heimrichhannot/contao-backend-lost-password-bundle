@@ -2,10 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2021-07-29
+
+- added possibility to request a new password not only by typing in the email address but also the username
+- added new yml config option `nc_notification` in order to assign a notification center notification id instead of the
+  raw email for password reset
+- added simple logging after password requests in system log
+
 ## [1.4.1] - 2021-07-28
+
 - Fixed: UndefinedMethodError in BackendController
 
 ## [1.4.0] - 2021-07-27
+
 - Added: option to add forgot password link automatically
 - Added: template option to BackendLostPasswordManager::getLostPasswordLink()
 - Added: license file

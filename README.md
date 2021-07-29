@@ -43,6 +43,8 @@ You can insert the lost password link in a custom login template where you want 
 
 ### Adjust the email's text
 
+**Hint: You can also set a notification center message by setting the id in your config.yml (see below).**
+
 Simply override the following `$GLOBALS` entries:
 
 ```
@@ -56,6 +58,10 @@ $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageBodyResetPassword']
 # Default configuration for extension with alias: "huh_backend_lost_password"
 huh_backend_lost_password:
 
-    # If true, that backend lost password link will be automatically added to the backed login template. Default false. Will be true in the next major version!
-    add_to_template:      false
+  # If true, that backend lost password link will be automatically added to the backed login template. Default false. Will be true in the next major version!
+  add_to_template:      false
+
+  # The numeric ID of the notification center notification which is sent for resetting the password.
+  nc_notification:        false
+
 ```
