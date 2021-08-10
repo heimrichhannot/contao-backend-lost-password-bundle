@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.1] - 2021-08-10
+- Fixed: missing english translation for notification center notification
+
 ## [1.5.0] - 2021-07-29
 
 - added possibility to request a new password not only by typing in the email address but also the username
