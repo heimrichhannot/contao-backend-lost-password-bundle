@@ -21,6 +21,20 @@ huh_backend_lost_password:
 
 ## Customize
 
+### Use Notification center
+
+You can use [Notification Center](https://github.com/terminal42/contao-notification_center) to send the password request.
+
+1. Create a notification with `##recipient_email##` as recipient and content that contains `##link##` (the link to the password reset page).
+    You can use additional token: `##domain##` and user data withing `##user_*##`.
+2. Set the id of the notification in your project configuration in `huh_backend_lost_password.nc_notification`.
+
+       ```yaml
+       # config/config.yml
+       huh_backend_lost_password:
+         nc_notification: 5
+       ```
+
 ### Usage in a custom template
 
 You can insert the lost password link in a custom login template where you want by calling `BackendLostPasswortManager->getLostPasswordLink()`.
@@ -63,5 +77,4 @@ huh_backend_lost_password:
 
   # The numeric ID of the notification center notification which is sent for resetting the password.
   nc_notification:        false
-
 ```
