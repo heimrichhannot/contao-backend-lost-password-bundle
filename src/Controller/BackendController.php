@@ -25,6 +25,7 @@ use HeimrichHannot\UtilsBundle\Dca\DcaUtil;
 use HeimrichHannot\UtilsBundle\Model\ModelUtil;
 use HeimrichHannot\UtilsBundle\Url\UrlUtil;
 use HeimrichHannot\UtilsBundle\Util\Utils;
+use NotificationCenter\Model\Notification;
 use Patchwork\Utf8;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -139,10 +140,10 @@ class BackendController
                 $user->backendLostPasswordActivation = $token;
                 $user->save();
 
-                $notification = $this->bundleConfig['nc_notification'] ?? 0;
+                $notificationId = $this->bundleConfig['nc_notification'] ?? 0;
 
-                if ($notification && class_exists('NotificationCenter\Model\Notification')) {
-                    $notification = \NotificationCenter\Model\Notification::findByPk($notification);
+                if ($notificationId && class_exists('NotificationCenter\Model\Notification')) {
+                    $notification = Notification::findByPk($notificationId);
 
                     if (null !== $notification) {
                         $tokens = [];
@@ -157,6 +158,8 @@ class BackendController
                         $tokens['link'] = $resetUrl;
 
                         $notification->send($tokens, $GLOBALS['TL_LANGUAGE']);
+                    } else {
+                        throw new \Exception("Invalid configuration! A notification with id $notificationId could not be found.");
                     }
                 } else {
                     $message = new Email();
