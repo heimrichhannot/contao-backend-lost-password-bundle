@@ -15,6 +15,7 @@ This bundle offers a lost password function for the backend of the Contao CMS.
 1. Set the `huh_backend_lost_password.add_to_template` to true if you want the lost password link automatically added to you backend login template.
 
 ```yaml
+# config/config.yml
 huh_backend_lost_password:
     add_to_template: true
 ```
@@ -29,11 +30,11 @@ You can use [Notification Center](https://github.com/terminal42/contao-notificat
     You can use additional token: `##domain##` and user data withing `##user_*##`.
 2. Set the id of the notification in your project configuration in `huh_backend_lost_password.nc_notification`.
 
-       ```yaml
-       # config/config.yml
-       huh_backend_lost_password:
-         nc_notification: 5
-       ```
+```yaml
+# config/config.yml
+huh_backend_lost_password:
+  nc_notification: 5
+```
 
 ### Usage in a custom template
 
