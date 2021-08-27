@@ -4,7 +4,7 @@
   "description": "This bundle offers a lost password function for the backend of the Contao CMS.",
   "license": "LGPL-3.0-or-later",
   "require": {
-    "php": "^7.1",
+    "php": "^7.1|^8.0",
     "contao/core-bundle": "^4.4",
     "heimrichhannot/contao-utils-bundle": "^2.196.0",
     "symfony/config": "^3.4|^4.4|^5.0",
