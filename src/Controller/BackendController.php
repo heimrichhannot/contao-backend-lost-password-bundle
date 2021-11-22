@@ -150,7 +150,60 @@ class BackendController
 
                         // Add user tokens
                         foreach ($user->row() as $k => $v) {
-                            $tokens['user_'.$k] = $v;
+                            // skip configuration and secret fields
+                            if (in_array($k, [
+                                'backendTheme',
+                                'fullscreen',
+                                'uploader',
+                                'showHelp',
+                                'thumbnails',
+                                'useRTE',
+                                'useCE',
+                                'password',
+                                'pwChange',
+                                'groups',
+                                'inherit',
+                                'modules',
+                                'themes',
+                                'elements',
+                                'fields',
+                                'pagemounts',
+                                'alpty',
+                                'fop',
+                                'imageSizes',
+                                'forms',
+                                'formp',
+                                'amg',
+                                'session',
+                                'secret',
+                                'trustedTokenVersion',
+                                'backupCodes',
+                                'modalp',
+                                'modals',
+                                'submissionsp',
+                                'submissionss',
+                                'categories',
+                                'readerbundlep',
+                                'readerbundles',
+                                'faqs',
+                                'faqp',
+                                'news',
+                                'newp',
+                                'newsfeeds',
+                                'newsfeedp',
+                                'calendars',
+                                'calendarp',
+                                'calendarfeeds',
+                                'calendarfeedp',
+                                'newsletters',
+                                'newsletterp',
+                            ])) {
+                                continue;
+                            }
+                            // skip fields leading to issues on json_encode
+                            if (ctype_print($v)) {
+                                $tokens['user_'.$k] = $v;
+                            }
                         }
 
                         $tokens['recipient_email'] = $user->email;

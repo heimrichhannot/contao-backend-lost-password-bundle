@@ -2,14 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.4] - 2021-11-22
+- Fixed: invalid and unnecessary tokens for notification center
+
 ## [1.5.3] - 2021-08-27
 
 - Added: php8 support
 
 ## [1.5.2] - 2021-08-10
+
 - Fixed: no feedback if notification not exist (when nc is used). Now an exception is thrown
 
 ## [1.5.1] - 2021-08-10
+
 - Fixed: missing english translation for notification center notification
 
 ## [1.5.0] - 2021-07-29
