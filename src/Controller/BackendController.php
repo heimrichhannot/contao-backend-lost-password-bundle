@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2021 Heimrich & Hannot GmbH
+ * Copyright (c) 2022 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
@@ -151,7 +151,7 @@ class BackendController
                         // Add user tokens
                         foreach ($user->row() as $k => $v) {
                             // skip configuration and secret fields
-                            if (in_array($k, [
+                            if (\in_array($k, [
                                 'backendTheme',
                                 'fullscreen',
                                 'uploader',
@@ -201,7 +201,7 @@ class BackendController
                                 continue;
                             }
                             // skip fields leading to issues on json_encode
-                            if (ctype_print($v)) {
+                            if (false !== json_encode($v)) {
                                 $tokens['user_'.$k] = $v;
                             }
                         }
@@ -313,7 +313,7 @@ class BackendController
 
                 $user->pwChange = '';
                 $user->backendLostPasswordActivation = '';
-                $user->password = password_hash($password, PASSWORD_DEFAULT);
+                $user->password = password_hash($password, \PASSWORD_DEFAULT);
                 $user->save();
 
                 Message::addConfirmation($GLOBALS['TL_LANG']['MSC']['pw_changed']);

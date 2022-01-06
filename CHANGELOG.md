@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.5] - 2022-01-06
+- Fixed: invalid tokens for notification center check
+
 ## [1.5.4] - 2021-11-22
 - Fixed: invalid and unnecessary tokens for notification center
 
