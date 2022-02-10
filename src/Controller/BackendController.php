@@ -26,7 +26,6 @@ use HeimrichHannot\UtilsBundle\Model\ModelUtil;
 use HeimrichHannot\UtilsBundle\Url\UrlUtil;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use NotificationCenter\Model\Notification;
-use Patchwork\Utf8;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -290,7 +289,7 @@ class BackendController
 
             if ($password !== $confirm) {
                 Message::addError($GLOBALS['TL_LANG']['ERR']['passwordMatch']);
-            } elseif (Utf8::strlen($password) < Config::get('minPasswordLength')) {
+            } elseif (mb_strlen($password) < Config::get('minPasswordLength')) {
                 Message::addError(sprintf($GLOBALS['TL_LANG']['ERR']['passwordLength'], Config::get('minPasswordLength')));
             } elseif ($password == $user->username) {
                 Message::addError($GLOBALS['TL_LANG']['ERR']['passwordName']);

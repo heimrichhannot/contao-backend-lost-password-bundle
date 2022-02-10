@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.6] - 2022-02-10
+
+- Removed: usage of Utf8 bundle functions
+
 ## [1.5.5] - 2022-01-06
 - Fixed: invalid tokens for notification center check
 
