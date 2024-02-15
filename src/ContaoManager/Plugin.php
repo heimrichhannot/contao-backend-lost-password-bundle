@@ -10,6 +10,7 @@ use Contao\ManagerPlugin\Config\ConfigPluginInterface;
 use Contao\ManagerPlugin\Config\ExtensionPluginInterface;
 use Contao\ManagerPlugin\Routing\RoutingPluginInterface;
 use HeimrichHannot\BackendLostPasswordBundle\ContaoBackendLostPasswordBundle;
+use HeimrichHannot\UtilsBundle\Arrays\ArrayUtil as UtilsV2ArrayUtil;
 use HeimrichHannot\UtilsBundle\Util\ArrayUtil;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\Config\Loader\LoaderResolverInterface;
@@ -45,7 +46,8 @@ class Plugin implements BundlePluginInterface, ConfigPluginInterface, RoutingPlu
     {
         // don't check for backend login
         if ('security' === $extensionName) {
-            ArrayUtil::insertBeforeKey($extensionConfigs[0]['firewalls'], 'install', 'lost-password', [
+            $arrayUtil = class_exists(ArrayUtil::class) ? ArrayUtil::class : UtilsV2ArrayUtil::class;
+            $arrayUtil::insertBeforeKey($extensionConfigs[0]['firewalls'], 'install', 'lost-password', [
                 'pattern' => '^/contao-be-lost-password',
                 'security' => false
             ]);
