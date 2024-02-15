@@ -129,9 +129,13 @@ class BackendController
         $template->username = $GLOBALS['TL_LANG']['tl_user']['email'][0].'/'.$GLOBALS['TL_LANG']['tl_user']['username'][0];
         $template->requestToken = $this->csrfTokenManager->getDefaultTokenValue();
 
-        if ('tl_request_password' == Input::post('FORM_SUBMIT') && ($username = Input::post('username'))) {
-            if ((null !== ($user = $this->modelUtil->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.email)=?'], [strtolower($username)])) ||
-                    null !== ($user = $this->modelUtil->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.username)=?'], [strtolower($username)]))) && $user->email) {
+        if ('tl_request_password' == Input::post('FORM_SUBMIT') && ($username = Input::post('username')))
+        {
+            $user = $this->modelUtil->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.email)=?'], [strtolower($username)]);
+            $user ??= $this->modelUtil->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.username)=?'], [strtolower($username)]);
+
+            if ($user !== null && $user->email)
+            {
                 $token = 'PW'.substr(md5(uniqid(mt_rand(), true)), 2);
                 $resetRoute = $this->router->getRouteCollection()->get('contao_backend_reset_password');
 
@@ -143,7 +147,8 @@ class BackendController
 
                 $notificationId = $this->bundleConfig['nc_notification'] ?? 0;
 
-                if ($notificationId && class_exists(Notification::class)) {
+                if ($notificationId && class_exists(Notification::class))
+                {
                     $notification = Notification::findByPk($notificationId);
 
                     if (null !== $notification) {
