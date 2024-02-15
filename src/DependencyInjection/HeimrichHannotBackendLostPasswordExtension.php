@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\Extension\Extension;
 
 class HeimrichHannotBackendLostPasswordExtension extends Extension
 {
-    public function load(array $configs, ContainerBuilder $container)
+    public function load(array $configs, ContainerBuilder $container): void
     {
         $configuration = new Configuration();
 
@@ -22,7 +22,7 @@ class HeimrichHannotBackendLostPasswordExtension extends Extension
         $container->setParameter('huh_backend_lost_password', $config);
     }
 
-    public function getAlias()
+    public function getAlias(): string
     {
         return 'huh_backend_lost_password';
     }

@@ -9,11 +9,12 @@
 namespace HeimrichHannot\BackendLostPasswordBundle;
 
 use HeimrichHannot\BackendLostPasswordBundle\DependencyInjection\HeimrichHannotBackendLostPasswordExtension;
+use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 class ContaoBackendLostPasswordBundle extends Bundle
 {
-    public function getContainerExtension()
+    public function getContainerExtension(): ?ExtensionInterface
     {
         return new HeimrichHannotBackendLostPasswordExtension();
     }

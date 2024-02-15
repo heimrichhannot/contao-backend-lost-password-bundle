@@ -10,7 +10,7 @@ use Contao\ManagerPlugin\Config\ConfigPluginInterface;
 use Contao\ManagerPlugin\Config\ExtensionPluginInterface;
 use Contao\ManagerPlugin\Routing\RoutingPluginInterface;
 use HeimrichHannot\BackendLostPasswordBundle\ContaoBackendLostPasswordBundle;
-use HeimrichHannot\UtilsBundle\Arrays\ArrayUtil;
+use HeimrichHannot\UtilsBundle\Util\ArrayUtil;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\Config\Loader\LoaderResolverInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
@@ -24,7 +24,8 @@ class Plugin implements BundlePluginInterface, ConfigPluginInterface, RoutingPlu
     public function getBundles(ParserInterface $parser)
     {
         return [
-            BundleConfig::create(ContaoBackendLostPasswordBundle::class)->setLoadAfter([ContaoCoreBundle::class]),
+            BundleConfig::create(ContaoBackendLostPasswordBundle::class)
+                ->setLoadAfter([ContaoCoreBundle::class])
         ];
     }
 
