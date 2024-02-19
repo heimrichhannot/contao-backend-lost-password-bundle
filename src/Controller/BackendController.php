@@ -64,7 +64,6 @@ class BackendController
         ContaoCsrfTokenManager $csrfTokenManager,
         LoggerInterface $contaoAccessLogger
     ) {
-        \Contao\CoreBundle\Monolog\SystemLogger::class;
         $this->dcaUtil = $dcaUtil;
         $this->framework = $framework;
         $this->router = $router;
