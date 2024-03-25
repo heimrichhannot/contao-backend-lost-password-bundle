@@ -1,17 +1,19 @@
 <?php
 
 /*
- * Copyright (c) 2022 Heimrich & Hannot GmbH
+ * Copyright (c) 2024 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
 
+use Contao\System;
 use HeimrichHannot\BackendLostPasswordBundle\EventListener\Contao\ParseTemplateListener;
+use HeimrichHannot\UtilsBundle\Util\Utils;
 
 /*
  * Assets
  */
-if (\Contao\System::getContainer()->get('huh.utils.container')->isBackend()) {
+if (System::getContainer()->get(Utils::class)->container()->isBackend()) {
     $GLOBALS['TL_CSS']['contao-backend-lost-password-bundle'] = 'bundles/contaobackendlostpassword/css/contao-backend-lost-password.css|static';
 }
 

@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## prepare [1.6.0] - YYYY-MM-DD
+- Added: support for Contao 5
+- Changed: dropped support for Contao 4.4 - 4.9
+- Changed: version requirements of dependencies
+
 ## [1.5.7] - 2022-02-14
 
 - Fixed: array index issues in php 8+

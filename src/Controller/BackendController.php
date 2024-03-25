@@ -12,6 +12,7 @@ use Contao\Backend;
 use Contao\BackendTemplate;
 use Contao\Config;
 use Contao\Controller;
+use Contao\CoreBundle\Csrf\ContaoCsrfTokenManager;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\DC_Table;
 use Contao\Email;
@@ -21,11 +22,9 @@ use Contao\Input;
 use Contao\Message;
 use Contao\StringUtil;
 use Contao\System;
-use HeimrichHannot\UtilsBundle\Dca\DcaUtil;
-use HeimrichHannot\UtilsBundle\Model\ModelUtil;
-use HeimrichHannot\UtilsBundle\Url\UrlUtil;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use NotificationCenter\Model\Notification;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -36,58 +35,45 @@ use Symfony\Component\Routing\RouterInterface;
  */
 class BackendController
 {
-    /**
-     * @var Utils
-     */
-    protected $utils;
-    protected $requestStack;
-    /**
-     * @var array
-     */
-    protected $bundleConfig;
-    /**
-     * @var DcaUtil
-     */
-    private $dcaUtil;
-
-    /**
-     * @var ContaoFramework
-     */
-    private $framework;
-
-    /**
-     * @var RouterInterface
-     */
-    private $router;
-
-    /**
-     * @var ModelUtil
-     */
-    private $modelUtil;
-
-    /**
-     * @var UrlUtil
-     */
-    private $urlUtil;
+    protected Utils $utils;
+    protected RequestStack $requestStack;
+    protected array $bundleConfig;
+    private ContaoFramework $framework;
+    private RouterInterface $router;
+    private ContaoCsrfTokenManager $csrfTokenManager;
 
     public function __construct(
         array $bundleConfig,
-        DcaUtil $dcaUtil,
-        ModelUtil $modelUtil,
-        UrlUtil $urlUtil,
         ContaoFramework $framework,
         RouterInterface $router,
         Utils $utils,
-        RequestStack $requestStack
+        RequestStack $requestStack,
+        ContaoCsrfTokenManager $csrfTokenManager
     ) {
-        $this->dcaUtil = $dcaUtil;
         $this->framework = $framework;
         $this->router = $router;
-        $this->modelUtil = $modelUtil;
-        $this->urlUtil = $urlUtil;
         $this->utils = $utils;
         $this->requestStack = $requestStack;
         $this->bundleConfig = $bundleConfig;
+        $this->csrfTokenManager = $csrfTokenManager;
+    }
+
+    /**
+     * @deprecated Remove when you can. Ported from Contao 4.13 {@link \Contao\Controller::setStaticUrls()}
+     */
+    private static function setStaticUrls(): void
+    {
+        if (defined('TL_FILES_URL'))
+        {
+            return;
+        }
+
+        define('TL_ASSETS_URL', System::getContainer()->get('contao.assets.assets_context')->getStaticUrl());
+        define('TL_FILES_URL', System::getContainer()->get('contao.assets.files_context')->getStaticUrl());
+
+        // Deprecated since Contao 4.0, to be removed in Contao 5.0
+        define('TL_SCRIPT_URL', TL_ASSETS_URL);
+        define('TL_PLUGINS_URL', TL_ASSETS_URL);
     }
 
     /**
@@ -101,11 +87,12 @@ class BackendController
     {
         $this->framework->initialize();
 
-        $this->dcaUtil->loadLanguageFile('default');
-        $this->dcaUtil->loadLanguageFile('modules');
-        $this->dcaUtil->loadLanguageFile('tl_user');
+        $system = $this->framework->getAdapter(System::class);
+        $system->loadLanguageFile('default');
+        $system->loadLanguageFile('modules');
+        $system->loadLanguageFile('tl_user');
 
-        Controller::setStaticUrls();
+        static::setStaticUrls();
 
         /** @var BackendTemplate|object $template */
         $template = new BackendTemplate('be_request_password');
@@ -116,32 +103,33 @@ class BackendController
         $template->language = $GLOBALS['TL_LANGUAGE'];
         $template->title = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pw_new']);
         $template->charset = Config::get('characterSet');
-        $template->action = ampersand(Environment::get('request'));
+        $template->action = StringUtil::ampersand(Environment::get('request'));
         $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['request'];
         $template->explain = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestExplanationEmail'];
         $template->submitButton = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue']);
         $template->username = $GLOBALS['TL_LANG']['tl_user']['email'][0].'/'.$GLOBALS['TL_LANG']['tl_user']['username'][0];
+        $template->requestToken = $this->csrfTokenManager->getDefaultTokenValue();
 
-        if ('tl_request_password' == Input::post('FORM_SUBMIT') && ($username = Input::post('username'))) {
-            if ((null !== ($user = $this->modelUtil->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.email)=?'], [strtolower($username)])) ||
-                    null !== ($user = $this->modelUtil->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.username)=?'], [strtolower($username)]))) && $user->email) {
+        if ('tl_request_password' == Input::post('FORM_SUBMIT') && ($username = Input::post('username')))
+        {
+            $user = $this->utils->model()->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.email)=?'], [strtolower($username)]);
+            $user ??= $this->utils->model()->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.username)=?'], [strtolower($username)]);
+
+            if ($user !== null && $user->email)
+            {
                 $token = 'PW'.substr(md5(uniqid(mt_rand(), true)), 2);
                 $resetRoute = $this->router->getRouteCollection()->get('contao_backend_reset_password');
 
-                if (version_compare(VERSION, '4.9', '<')) {
-                    $resetUrl = Environment::get('url').($this->utils->container()->isDev() ? '/app_dev.php' : '').$resetRoute->getPath();
-                } else {
-                    $resetUrl = Environment::get('url').$resetRoute->getPath();
-                }
-
-                $resetUrl = $this->urlUtil->addQueryString('token='.$token, $resetUrl);
+                $resetUrl = Environment::get('url').$resetRoute->getPath();
+                $resetUrl = $this->utils->url()->addQueryStringParameterToUrl('token='.$token, $resetUrl);
 
                 $user->backendLostPasswordActivation = $token;
                 $user->save();
 
                 $notificationId = $this->bundleConfig['nc_notification'] ?? 0;
 
-                if ($notificationId && class_exists('NotificationCenter\Model\Notification')) {
+                if ($notificationId && class_exists(Notification::class))
+                {
                     $notification = Notification::findByPk($notificationId);
 
                     if (null !== $notification) {
@@ -224,7 +212,7 @@ class BackendController
                     $message->sendTo($user->email);
                 }
 
-                Controller::log('A new password has been requested for backend user ID '.$user->id.' ('.$username->email.')', __METHOD__, TL_ACCESS);
+                $this->utils->container()->log("A new password has been requested for backend user ID {$user->id} ({$user->email})", __METHOD__, 'ACCESS');
             }
 
             $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['thankYou'];
@@ -244,16 +232,17 @@ class BackendController
      *
      * @Route("/contao-be-lost-password/password/reset", name="contao_backend_reset_password")
      */
-    public function resetPasswordAction()
+    public function resetPasswordAction(Request $request): Response
     {
-        $request = $this->requestStack->getCurrentRequest();
+        // $request = $this->requestStack->getCurrentRequest();
 
         $this->framework->initialize();
 
-        $this->dcaUtil->loadLanguageFile('default');
-        $this->dcaUtil->loadLanguageFile('modules');
+        $system = $this->framework->getAdapter(System::class);
+        $system->loadLanguageFile('default');
+        $system->loadLanguageFile('modules');
 
-        Controller::setStaticUrls();
+        static::setStaticUrls();
 
         /** @var BackendTemplate|object $template */
         $template = new BackendTemplate('be_reset_password');
@@ -262,24 +251,25 @@ class BackendController
         $template->messages = Message::generate();
         $template->base = Environment::get('base');
         $template->language = $GLOBALS['TL_LANGUAGE'];
-        $template->title = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pw_new']);
+        $template->title = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pw_new'] ?? '');
         $template->charset = Config::get('characterSet');
-        $template->action = ampersand(Environment::get('request'));
-        $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['reset'];
-        $template->explain = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetExplanation'];
-        $template->submitButton = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue']);
-        $template->password = $GLOBALS['TL_LANG']['MSC']['password'][0];
-        $template->confirm = $GLOBALS['TL_LANG']['MSC']['confirm'][0];
+        $template->action = StringUtil::ampersand(Environment::get('request'));
+        $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['reset'] ?? null;
+        $template->explain = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetExplanation'] ?? null;
+        $template->submitButton = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue'] ?? '');
+        $template->password = $GLOBALS['TL_LANG']['MSC']['password'][0] ?? null;
+        $template->confirm = $GLOBALS['TL_LANG']['MSC']['confirm'][0] ?? null;
+        $template->requestToken = $this->csrfTokenManager->getDefaultTokenValue();
 
         if (!($token = $request->query->get('token')) || 0 !== strncmp($token, 'PW', 2)) {
             $template->errorMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetErrorExplanation'];
-
             return $template->getResponse();
         }
 
-        if (null === ($user = $this->modelUtil->findOneModelInstanceBy('tl_user', ['tl_user.backendLostPasswordActivation=?'], [$token]))) {
-            $template->errorMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetErrorExplanation'];
+        $user = $this->utils->model()->findOneModelInstanceBy('tl_user', ['tl_user.backendLostPasswordActivation=?'], [$token]);
 
+        if (null === $user) {
+            $template->errorMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetErrorExplanation'];
             return $template->getResponse();
         }
 
@@ -294,7 +284,12 @@ class BackendController
             } elseif ($password == $user->username) {
                 Message::addError($GLOBALS['TL_LANG']['ERR']['passwordName']);
             } else {
-                $this->dcaUtil->loadDc('tl_user');
+                $table = 'tl_user';
+                if (!isset($GLOBALS['TL_DCA'][$table])) {
+                    /** @var Controller $controller */
+                    $controller = $this->framework->getAdapter(Controller::class);
+                    $controller->loadDataContainer($table);
+                }
 
                 if (\is_array($GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'])) {
                     $dc = new DC_Table('tl_user');
