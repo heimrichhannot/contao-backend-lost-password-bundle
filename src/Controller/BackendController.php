@@ -12,7 +12,6 @@ use Contao\Backend;
 use Contao\BackendTemplate;
 use Contao\Config;
 use Contao\Controller;
-use Contao\CoreBundle\Asset\ContaoContext;
 use Contao\CoreBundle\Csrf\ContaoCsrfTokenManager;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\DC_Table;
@@ -23,9 +22,6 @@ use Contao\Input;
 use Contao\Message;
 use Contao\StringUtil;
 use Contao\System;
-use HeimrichHannot\UtilsBundle\Util\DcaUtil;
-use HeimrichHannot\UtilsBundle\Util\ModelUtil;
-use HeimrichHannot\UtilsBundle\Util\UrlUtil;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use NotificationCenter\Model\Notification;
 use Symfony\Component\HttpFoundation\Request;
@@ -42,29 +38,20 @@ class BackendController
     protected Utils $utils;
     protected RequestStack $requestStack;
     protected array $bundleConfig;
-    private DcaUtil $dcaUtil;
     private ContaoFramework $framework;
     private RouterInterface $router;
-    private ModelUtil $modelUtil;
-    private UrlUtil $urlUtil;
     private ContaoCsrfTokenManager $csrfTokenManager;
 
     public function __construct(
         array $bundleConfig,
-        DcaUtil $dcaUtil,
-        ModelUtil $modelUtil,
-        UrlUtil $urlUtil,
         ContaoFramework $framework,
         RouterInterface $router,
         Utils $utils,
         RequestStack $requestStack,
         ContaoCsrfTokenManager $csrfTokenManager
     ) {
-        $this->dcaUtil = $dcaUtil;
         $this->framework = $framework;
         $this->router = $router;
-        $this->modelUtil = $modelUtil;
-        $this->urlUtil = $urlUtil;
         $this->utils = $utils;
         $this->requestStack = $requestStack;
         $this->bundleConfig = $bundleConfig;
@@ -125,8 +112,8 @@ class BackendController
 
         if ('tl_request_password' == Input::post('FORM_SUBMIT') && ($username = Input::post('username')))
         {
-            $user = $this->modelUtil->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.email)=?'], [strtolower($username)]);
-            $user ??= $this->modelUtil->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.username)=?'], [strtolower($username)]);
+            $user = $this->utils->model()->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.email)=?'], [strtolower($username)]);
+            $user ??= $this->utils->model()->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.username)=?'], [strtolower($username)]);
 
             if ($user !== null && $user->email)
             {
@@ -276,13 +263,13 @@ class BackendController
 
         if (!($token = $request->query->get('token')) || 0 !== strncmp($token, 'PW', 2)) {
             $template->errorMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetErrorExplanation'];
-
             return $template->getResponse();
         }
 
-        if (null === ($user = $this->modelUtil->findOneModelInstanceBy('tl_user', ['tl_user.backendLostPasswordActivation=?'], [$token]))) {
-            $template->errorMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetErrorExplanation'];
+        $user = $this->utils->model()->findOneModelInstanceBy('tl_user', ['tl_user.backendLostPasswordActivation=?'], [$token]);
 
+        if (null === $user) {
+            $template->errorMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetErrorExplanation'];
             return $template->getResponse();
         }
 
