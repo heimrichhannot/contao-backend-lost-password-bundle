@@ -27,9 +27,7 @@ use HeimrichHannot\UtilsBundle\Util\DcaUtil;
 use HeimrichHannot\UtilsBundle\Util\ModelUtil;
 use HeimrichHannot\UtilsBundle\Util\UrlUtil;
 use HeimrichHannot\UtilsBundle\Util\Utils;
-use Monolog\Logger;
 use NotificationCenter\Model\Notification;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -50,7 +48,6 @@ class BackendController
     private ModelUtil $modelUtil;
     private UrlUtil $urlUtil;
     private ContaoCsrfTokenManager $csrfTokenManager;
-    private LoggerInterface $contaoAccessLogger;
 
     public function __construct(
         array $bundleConfig,
@@ -61,8 +58,7 @@ class BackendController
         RouterInterface $router,
         Utils $utils,
         RequestStack $requestStack,
-        ContaoCsrfTokenManager $csrfTokenManager,
-        LoggerInterface $contaoAccessLogger
+        ContaoCsrfTokenManager $csrfTokenManager
     ) {
         $this->dcaUtil = $dcaUtil;
         $this->framework = $framework;
@@ -73,7 +69,6 @@ class BackendController
         $this->requestStack = $requestStack;
         $this->bundleConfig = $bundleConfig;
         $this->csrfTokenManager = $csrfTokenManager;
-        $this->contaoAccessLogger = $contaoAccessLogger;
     }
 
     /**
@@ -81,17 +76,17 @@ class BackendController
      */
     private static function setStaticUrls(): void
     {
-        if (\defined('TL_FILES_URL'))
+        if (defined('TL_FILES_URL'))
         {
             return;
         }
 
-        \define('TL_ASSETS_URL', System::getContainer()->get('contao.assets.assets_context')->getStaticUrl());
-        \define('TL_FILES_URL', System::getContainer()->get('contao.assets.files_context')->getStaticUrl());
+        define('TL_ASSETS_URL', System::getContainer()->get('contao.assets.assets_context')->getStaticUrl());
+        define('TL_FILES_URL', System::getContainer()->get('contao.assets.files_context')->getStaticUrl());
 
         // Deprecated since Contao 4.0, to be removed in Contao 5.0
-        \define('TL_SCRIPT_URL', TL_ASSETS_URL);
-        \define('TL_PLUGINS_URL', TL_ASSETS_URL);
+        define('TL_SCRIPT_URL', TL_ASSETS_URL);
+        define('TL_PLUGINS_URL', TL_ASSETS_URL);
     }
 
     /**
@@ -230,7 +225,7 @@ class BackendController
                     $message->sendTo($user->email);
                 }
 
-                $this->contaoAccessLogger->info("A new password has been requested for backend user ID {$user->id} ({$user->email})");
+                $this->utils->container()->log("A new password has been requested for backend user ID {$user->id} ({$user->email})", __METHOD__, 'ACCESS');
             }
 
             $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['thankYou'];
