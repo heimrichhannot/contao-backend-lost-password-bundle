@@ -278,11 +278,14 @@ class BackendController
             $confirm = $request->request->get('confirm');
 
             if ($password !== $confirm) {
-                Message::addError($GLOBALS['TL_LANG']['ERR']['passwordMatch']);
+                Message::addError($GLOBALS['TL_LANG']['ERR']['passwordMatch'] ?? 'Passwords don\'t match.');
             } elseif (mb_strlen($password) < Config::get('minPasswordLength')) {
-                Message::addError(sprintf($GLOBALS['TL_LANG']['ERR']['passwordLength'], Config::get('minPasswordLength')));
-            } elseif ($password == $user->username) {
-                Message::addError($GLOBALS['TL_LANG']['ERR']['passwordName']);
+                Message::addError(sprintf(
+                    $GLOBALS['TL_LANG']['ERR']['passwordLength'] ?? 'Minimum required password length is %s.',
+                    Config::get('minPasswordLength')
+                ));
+            } elseif (str_contains($password, $user->username)) {
+                Message::addError($GLOBALS['TL_LANG']['ERR']['passwordName'] ?? 'The password must not contain the username.');
             } else {
                 $table = 'tl_user';
                 if (!isset($GLOBALS['TL_DCA'][$table])) {
@@ -291,7 +294,7 @@ class BackendController
                     $controller->loadDataContainer($table);
                 }
 
-                if (\is_array($GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'])) {
+                if (\is_array($GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'] ?? null)) {
                     $dc = new DC_Table('tl_user');
                     $dc->id = $user->id;
 
@@ -310,7 +313,8 @@ class BackendController
                 $user->password = password_hash($password, \PASSWORD_DEFAULT);
                 $user->save();
 
-                Message::addConfirmation($GLOBALS['TL_LANG']['MSC']['pw_changed']);
+                Message::addConfirmation($GLOBALS['TL_LANG']['MSC']['pw_changed']
+                    ?? 'The password has been changed successfully.');
                 Controller::redirect('contao/main.php');
             }
 
