@@ -308,14 +308,14 @@ class BackendController
                     }
                 }
 
-                $user->pwChange = '';
+                $user->pwChange = false;
                 $user->backendLostPasswordActivation = '';
                 $user->password = password_hash($password, \PASSWORD_DEFAULT);
                 $user->save();
 
                 Message::addConfirmation($GLOBALS['TL_LANG']['MSC']['pw_changed']
                     ?? 'The password has been changed successfully.');
-                Controller::redirect('contao/main.php');
+                Controller::redirect('contao');
             }
 
             Controller::reload();
