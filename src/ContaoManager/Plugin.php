@@ -21,7 +21,7 @@ class Plugin implements BundlePluginInterface, ConfigPluginInterface, RoutingPlu
     /**
      * {@inheritdoc}
      */
-    public function getBundles(ParserInterface $parser)
+    public function getBundles(ParserInterface $parser): array
     {
         return [
             BundleConfig::create(ContaoBackendLostPasswordBundle::class)
@@ -29,7 +29,7 @@ class Plugin implements BundlePluginInterface, ConfigPluginInterface, RoutingPlu
         ];
     }
 
-    public function registerContainerConfiguration(LoaderInterface $loader, array $managerConfig)
+    public function registerContainerConfiguration(LoaderInterface $loader, array $managerConfig): void
     {
         $loader->load('@ContaoBackendLostPasswordBundle/Resources/config/services.yml');
     }
@@ -41,7 +41,7 @@ class Plugin implements BundlePluginInterface, ConfigPluginInterface, RoutingPlu
         return $resolver->resolve($file)->load($file);
     }
 
-    public function getExtensionConfig($extensionName, array $extensionConfigs, ContainerBuilder $container)
+    public function getExtensionConfig($extensionName, array $extensionConfigs, ContainerBuilder $container): array
     {
         // don't check for backend login
         if ('security' === $extensionName) {
