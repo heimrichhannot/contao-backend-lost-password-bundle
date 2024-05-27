@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] - 2024-05-27
+- Added: select mailer transport for outgoing mails in settings
+
 ## [1.6.0] - 2024-03-25
 - Added: support for Contao 5
 - Changed: dropped support for Contao 4.4 - 4.9

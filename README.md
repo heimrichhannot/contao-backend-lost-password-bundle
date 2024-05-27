@@ -6,8 +6,9 @@ This bundle offers a lost password function for the backend of the Contao CMS.
 
 ## Features
 
-- don't ever send your customers new passwords if they forgot or lost theirs again :-)
-- after a password request, an email is being sent to the email address of the corresponding user offering a reset link
+- Never send new passwords to your customers again if they have forgotten their old ones. :-)
+- After requesting a new password, a password reset link is sent to the user's email.
+- Select a mailer transport for outgoing mails in the settings.
 
 ## Installation
 
