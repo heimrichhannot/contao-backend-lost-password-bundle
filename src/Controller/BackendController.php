@@ -100,13 +100,13 @@ class BackendController
         $template->theme = Backend::getTheme();
         $template->messages = Message::generate();
         $template->base = Environment::get('base');
-        $template->language = $GLOBALS['TL_LANGUAGE'];
-        $template->title = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pw_new']);
-        $template->charset = Config::get('characterSet');
+        $template->language = $GLOBALS['TL_LANGUAGE'] ?? 'en';
+        $template->title = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pw_new'] ?? '');
+        $template->charset = Config::get('characterSet') ?? 'utf-8';
         $template->action = StringUtil::ampersand(Environment::get('request'));
-        $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['request'];
-        $template->explain = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestExplanationEmail'];
-        $template->submitButton = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue']);
+        $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['request'] ?? '';
+        $template->explain = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestExplanationEmail'] ?? '';
+        $template->submitButton = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue'] ?? 'continue');
         $template->username = $GLOBALS['TL_LANG']['tl_user']['email'][0].'/'.$GLOBALS['TL_LANG']['tl_user']['username'][0];
         $template->requestToken = $this->csrfTokenManager->getDefaultTokenValue();
 
@@ -117,9 +117,9 @@ class BackendController
             return $template->getResponse();
         }
 
-        $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['thankYou'];
-        $template->successMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestLinkSentEmail'];
-        $template->spamNote = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['spamNote'];
+        $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['thankYou'] ?? '';
+        $template->successMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestLinkSentEmail'] ?? 'Success';
+        $template->spamNote = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['spamNote'] ?? '';
 
         $user = $this->utils->model()->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.email)=?'], [strtolower($username)]);
         $user ??= $this->utils->model()->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.username)=?'], [strtolower($username)]);
