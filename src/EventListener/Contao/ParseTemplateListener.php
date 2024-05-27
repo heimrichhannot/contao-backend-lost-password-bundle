@@ -1,9 +1,9 @@
 <?php
 
-/*
- * Copyright (c) 2021 Heimrich & Hannot GmbH
- *
- * @license LGPL-3.0-or-later
+/**
+ * @package   Contao Backend Lost Password Bundle
+ * @copyright Heimrich & Hannot GmbH, 2024
+ * @license   LGPL-3.0-or-later
  */
 
 namespace HeimrichHannot\BackendLostPasswordBundle\EventListener\Contao;
@@ -29,10 +29,20 @@ class ParseTemplateListener
 
     public function __invoke(Template $template): void
     {
-        if (true === $this->bundleConfig['add_to_template'] && 'be_login' === $template->getName()) {
-            $template->messages = $this->backendLostPasswordManager->getLostPasswordLink([
-                'template' => '@ContaoBackendLostPassword/be_lost_password_link_main.html.twig',
-            ]).($template->messages ?? '');
+        if (true !== $this->bundleConfig['add_to_template']) {
+            return;
         }
+
+        if ('be_login' !== $template->getName()) {
+            return;
+        }
+
+        $messages = $this->backendLostPasswordManager->getLostPasswordLink([
+            'template' => '@ContaoBackendLostPassword/be_lost_password_link_main.html.twig'
+        ]);
+
+        $messages .= ($template->messages ?? '');
+
+        $template->messages = $messages;
     }
 }
