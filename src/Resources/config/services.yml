@@ -5,8 +5,5 @@ services:
     bind:
       $bundleConfig: "%huh_backend_lost_password%"
 
-  HeimrichHannot\BackendLostPasswordBundle\Controller\BackendController: ~
-  HeimrichHannot\BackendLostPasswordBundle\Manager\BackendLostPasswordManager: ~
-
-  HeimrichHannot\BackendLostPasswordBundle\EventListener\:
-    resource: '../../EventListener/*'
+  HeimrichHannot\BackendLostPasswordBundle\:
+    resource: '../../{Controller,DataContainer,EventListener,Manager}'
