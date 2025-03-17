@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.1] - 2025-03-17
+- Changed: password templates to inherit be_login
+
 ## [1.7.0] - 2024-05-27
 - Added: select mailer transport for outgoing mails in settings
 
