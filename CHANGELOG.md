@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.0] - 2025-09-29
+- Changed: dropped support for symfony 3 and 4
+- Changed: added basic CI chain
+- Fixed: missing english label
+
 ## [1.7.1] - 2025-03-17
 - Changed: password templates to inherit be_login
 
