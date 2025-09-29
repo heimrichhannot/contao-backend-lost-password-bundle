@@ -12,10 +12,15 @@ use Contao\Environment;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use Symfony\Component\Routing\RouterInterface;
 use Twig\Environment as TwigEnvironment;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 
 class BackendLostPasswordManager
 {
-    /** @var Utils */
+    /**
+     * @var Utils
+     */
     protected $utils;
     /**
      * @var TwigEnvironment
@@ -39,9 +44,9 @@ class BackendLostPasswordManager
      * Options:
      * - template: (string) Set a custom template. Default '@ContaoBackendLostPassword/link_lost_password.html.twig'
      *
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
      */
     public function getLostPasswordLink(array $options = []): string
     {
@@ -53,7 +58,7 @@ class BackendLostPasswordManager
 
         $requestRoute = $this->router->getRouteCollection()->get('contao_backend_request_password');
 
-        $requestUrl = Environment::get('url').$requestRoute->getPath();
+        $requestUrl = Environment::get('url') . $requestRoute->getPath();
 
         return $this->twig->render(
             $options['template'], [

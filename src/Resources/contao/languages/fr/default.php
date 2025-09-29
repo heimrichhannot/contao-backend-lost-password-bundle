@@ -3,7 +3,7 @@
 $lang = &$GLOBALS['TL_LANG']['MSC']['backendLostPassword'];
 
 /**
- * Misc
+ * Misc.
  */
 $lang = [
     'thankYou' => 'Merci',

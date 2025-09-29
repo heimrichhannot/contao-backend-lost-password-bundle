@@ -6,7 +6,10 @@ $dca = &$GLOBALS['TL_DCA']['tl_settings'];
 
 $dca['fields']['beLostPassword_mailerTransport'] = [
     'inputType' => 'select',
-    'eval' => ['tl_class'=>'w50', 'includeBlankOption'=>true],
+    'eval' => [
+        'tl_class' => 'w50',
+        'includeBlankOption' => true
+    ],
     'sql' => "varchar(255) NOT NULL default ''"
 ];
 
