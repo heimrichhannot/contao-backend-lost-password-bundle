@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @package   Contao Backend Lost Password Bundle
  * @copyright Heimrich & Hannot GmbH, 2024
  * @license   LGPL-3.0-or-later
  */
@@ -22,7 +21,6 @@ use Contao\Input;
 use Contao\Message;
 use Contao\StringUtil;
 use Contao\System;
-use Exception;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use NotificationCenter\Model\Notification;
 use Symfony\Component\HttpFoundation\Request;
@@ -64,8 +62,7 @@ class BackendController
      */
     private static function setStaticUrls(): void
     {
-        if (defined('TL_FILES_URL'))
-        {
+        if (defined('TL_FILES_URL')) {
             return;
         }
 
@@ -80,7 +77,8 @@ class BackendController
     /**
      * Renders the "request password" form.
      *
-     * @throws Exception
+     * @throws \Exception
+     *
      * @Route("/contao-be-lost-password/password/request", name="contao_backend_request_password")
      */
     public function requestPasswordAction(): Response
@@ -107,13 +105,12 @@ class BackendController
         $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['request'] ?? '';
         $template->explain = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestExplanationEmail'] ?? '';
         $template->submitButton = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue'] ?? 'continue');
-        $template->username = $GLOBALS['TL_LANG']['tl_user']['email'][0].'/'.$GLOBALS['TL_LANG']['tl_user']['username'][0];
+        $template->username = $GLOBALS['TL_LANG']['tl_user']['email'][0] . '/' . $GLOBALS['TL_LANG']['tl_user']['username'][0];
         $template->requestToken = $this->csrfTokenManager->getDefaultTokenValue();
 
         $username = Input::post('username');
 
-        if (Input::post('FORM_SUBMIT') !== 'tl_request_password' || !$username)
-        {
+        if ('tl_request_password' !== Input::post('FORM_SUBMIT') || !$username) {
             return $template->getResponse();
         }
 
@@ -124,26 +121,22 @@ class BackendController
         $user = $this->utils->model()->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.email)=?'], [strtolower($username)]);
         $user ??= $this->utils->model()->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.username)=?'], [strtolower($username)]);
 
-        if ($user === null || !$user->email)
-        {
+        if (null === $user || !$user->email) {
             return $template->getResponse();
         }
 
-        $token = 'PW'.substr(md5(uniqid(mt_rand(), true)), 2);
+        $token = 'PW' . substr(md5(uniqid(mt_rand(), true)), 2);
         $resetRoute = $this->router->getRouteCollection()->get('contao_backend_reset_password');
 
-        $resetUrl = Environment::get('url').$resetRoute->getPath();
-        $resetUrl = $this->utils->url()->addQueryStringParameterToUrl('token='.$token, $resetUrl);
+        $resetUrl = Environment::get('url') . $resetRoute->getPath();
+        $resetUrl = $this->utils->url()->addQueryStringParameterToUrl('token=' . $token, $resetUrl);
 
         $user->backendLostPasswordActivation = $token;
         $user->save();
 
-        if (class_exists(Notification::class) && $notificationId = $this->bundleConfig['nc_notification'] ?? 0)
-        {
+        if (class_exists(Notification::class) && $notificationId = $this->bundleConfig['nc_notification'] ?? 0) {
             $this->sendResetNotification($notificationId, $user, $resetUrl);
-        }
-        else
-        {
+        } else {
             $this->sendResetEmail($resetUrl, $user->email);
         }
 
@@ -153,7 +146,7 @@ class BackendController
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     protected function sendResetEmail(string $resetUrl, string $to): void
     {
@@ -164,8 +157,7 @@ class BackendController
         $email->subject = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageSubjectResetPassword'] ?? 'Reset Password';
         $email->text = str_replace('##reset_url##', $resetUrl, $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageBodyResetPassword'] ?? 'Reset: ##reset_url##');
 
-        if ($transport = Config::get('beLostPassword_mailerTransport'))
-        {
+        if ($transport = Config::get('beLostPassword_mailerTransport')) {
             $email->addHeader('X-Transport', $transport);
         }
 
@@ -173,14 +165,17 @@ class BackendController
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     protected function sendResetNotification($notificationId, $user, $resetUrl): void
     {
+        /**
+         * @phpstan-ignore class.notFound
+         */
         $notification = Notification::findByPk($notificationId);
 
-        if ($notification === null) {
-            throw new Exception("Invalid configuration! A notification with id $notificationId could not be found.");
+        if (null === $notification) {
+            throw new \Exception("Invalid configuration! A notification with id $notificationId could not be found.");
         }
 
         $secretFields = [
@@ -234,8 +229,7 @@ class BackendController
         $tokens = [];
 
         // Add user tokens
-        foreach ($user->row() as $k => $v)
-        {
+        foreach ($user->row() as $k => $v) {
             // skip configuration and secret fields
             if (\in_array($k, $secretFields)) {
                 continue;
@@ -243,7 +237,7 @@ class BackendController
 
             // skip fields leading to issues on json_encode
             if (false !== \json_encode($v)) {
-                $tokens['user_'.$k] = $v;
+                $tokens['user_' . $k] = $v;
             }
         }
 
@@ -290,6 +284,7 @@ class BackendController
 
         if (!($token = $request->query->get('token')) || 0 !== strncmp($token, 'PW', 2)) {
             $template->errorMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetErrorExplanation'];
+
             return $template->getResponse();
         }
 
@@ -297,6 +292,7 @@ class BackendController
 
         if (null === $user) {
             $template->errorMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetErrorExplanation'];
+
             return $template->getResponse();
         }
 
@@ -307,23 +303,16 @@ class BackendController
         $password = $request->request->get('password');
         $confirm = $request->request->get('confirm');
 
-        if ($password !== $confirm)
-        {
+        if ($password !== $confirm) {
             Message::addError($GLOBALS['TL_LANG']['ERR']['passwordMatch'] ?? 'Passwords don\'t match.');
-        }
-        elseif (mb_strlen($password) < Config::get('minPasswordLength'))
-        {
+        } elseif (mb_strlen($password) < Config::get('minPasswordLength')) {
             Message::addError(sprintf(
                 $GLOBALS['TL_LANG']['ERR']['passwordLength'] ?? 'Minimum required password length is %s.',
                 Config::get('minPasswordLength')
             ));
-        }
-        elseif (str_contains($password, $user->username))
-        {
+        } elseif (str_contains($password, $user->username)) {
             Message::addError($GLOBALS['TL_LANG']['ERR']['passwordName'] ?? 'The password must not contain the username.');
-        }
-        else
-        {
+        } else {
             $table = 'tl_user';
             if (!isset($GLOBALS['TL_DCA'][$table])) {
                 /** @var Controller $controller */

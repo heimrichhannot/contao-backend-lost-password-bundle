@@ -3,12 +3,14 @@
 $dca = &$GLOBALS['TL_DCA']['tl_user'];
 
 /**
- * Fields
+ * Fields.
  */
 $fields = [
     'backendLostPasswordActivation' => [
-        'eval' => ['doNotCopy' => true],
-        'sql'  => "varchar(32) NOT NULL default ''"
+        'eval' => [
+            'doNotCopy' => true
+        ],
+        'sql' => "varchar(32) NOT NULL default ''"
     ],
 ];
 

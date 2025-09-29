@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use PhpCsFixer\Fixer\Basic\BracesPositionFixer;
+use PhpCsFixer\Fixer\ControlStructure\TrailingCommaInMultilineFixer;
 use PhpCsFixer\Fixer\Import\NoUnusedImportsFixer;
 use PhpCsFixer\Fixer\Operator\NotOperatorWithSuccessorSpaceFixer;
 use PhpCsFixer\Fixer\Whitespace\MethodChainingIndentationFixer;
@@ -31,6 +32,9 @@ return ECSConfig::configure()
     )
     ->withPhpCsFixerSets(symfony: true)
     ->withSkip([
+        //remove when php8 is supported:
+        TrailingCommaInMultilineFixer::class,
+
         NotOperatorWithSuccessorSpaceFixer::class,
         MethodChainingIndentationFixer::class => [
             '*/DependencyInjection/Configuration.php',

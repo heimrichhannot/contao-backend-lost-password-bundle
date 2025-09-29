@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @package   Contao Backend Lost Password Bundle
  * @copyright Heimrich & Hannot GmbH, 2024
  * @license   LGPL-3.0-or-later
  */
@@ -13,14 +12,15 @@ use HeimrichHannot\BackendLostPasswordBundle\Manager\BackendLostPasswordManager;
 
 class ParseTemplateListener
 {
-    /** @var BackendLostPasswordManager */
+    /**
+     * @var BackendLostPasswordManager
+     */
     protected $backendLostPasswordManager;
-    /** @var array */
+    /**
+     * @var array
+     */
     protected $bundleConfig;
 
-    /**
-     * ParseTemplateListener constructor.
-     */
     public function __construct(BackendLostPasswordManager $backendLostPasswordManager, array $bundleConfig)
     {
         $this->backendLostPasswordManager = $backendLostPasswordManager;
