@@ -8,6 +8,9 @@
 
 namespace HeimrichHannot\BackendLostPasswordBundle\Manager;
 
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 use Contao\Environment;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use Symfony\Component\Routing\RouterInterface;
@@ -39,9 +42,9 @@ class BackendLostPasswordManager
      * Options:
      * - template: (string) Set a custom template. Default '@ContaoBackendLostPassword/link_lost_password.html.twig'
      *
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
      */
     public function getLostPasswordLink(array $options = []): string
     {

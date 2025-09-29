@@ -13,18 +13,10 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class Configuration implements ConfigurationInterface
 {
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('huh_backend_lost_password');
-
-        // Keep compatibility with symfony/config < 4.2
-        if (!method_exists($treeBuilder, 'getRootNode')) {
-            $rootNode = $treeBuilder->root('huh_backend_lost_password');
-        } else {
-            $rootNode = $treeBuilder->getRootNode();
-        }
-
-        $rootNode
+        $treeBuilder->getRootNode()
             ->children()
                 ->booleanNode('add_to_template')
                     ->info('If true, that backend lost password link will be automatically added to the backed login template. Default false. Will be true in the next major version!')

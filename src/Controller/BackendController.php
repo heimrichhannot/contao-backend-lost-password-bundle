@@ -73,8 +73,8 @@ class BackendController
         define('TL_FILES_URL', System::getContainer()->get('contao.assets.files_context')->getStaticUrl());
 
         // Deprecated since Contao 4.0, to be removed in Contao 5.0
-        define('TL_SCRIPT_URL', TL_ASSETS_URL);
-        define('TL_PLUGINS_URL', TL_ASSETS_URL);
+        define('TL_SCRIPT_URL', System::getContainer()->get('contao.assets.assets_context')->getStaticUrl());
+        define('TL_PLUGINS_URL', System::getContainer()->get('contao.assets.assets_context')->getStaticUrl());
     }
 
     /**
