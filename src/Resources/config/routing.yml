@@ -1,3 +1,0 @@
-huh_backend_lost_password:
-  resource: "@ContaoBackendLostPasswordBundle/Controller/"
-  type: annotation

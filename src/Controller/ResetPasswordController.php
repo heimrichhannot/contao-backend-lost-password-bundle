@@ -11,6 +11,7 @@ use Contao\Backend;
 use Contao\BackendTemplate;
 use Contao\Config;
 use Contao\Controller;
+use Contao\CoreBundle\Controller\AbstractController;
 use Contao\CoreBundle\Csrf\ContaoCsrfTokenManager;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\DC_Table;
@@ -24,38 +25,20 @@ use Contao\System;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use NotificationCenter\Model\Notification;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\RouterInterface;
 
-/**
- * @Route(defaults={"_scope" = "backend", "_token_check" = true})
- */
-class BackendController
+#[Route('/contao-be-lost-password/password', defaults: ['_scope' => 'backend', '_token_check' => true])]
+class ResetPasswordController extends AbstractController
 {
-    protected array $bundleConfig;
-    protected ContaoCsrfTokenManager $csrfTokenManager;
-    protected ContaoFramework $framework;
-    protected RequestStack $requestStack;
-    protected RouterInterface $router;
-    protected Utils $utils;
-
     public function __construct(
-        array $bundleConfig,
-        ContaoCsrfTokenManager $csrfTokenManager,
-        ContaoFramework $framework,
-        RequestStack $requestStack,
-        RouterInterface $router,
-        Utils $utils
-    ) {
-        $this->bundleConfig = $bundleConfig;
-        $this->csrfTokenManager = $csrfTokenManager;
-        $this->framework = $framework;
-        $this->requestStack = $requestStack;
-        $this->router = $router;
-        $this->utils = $utils;
-    }
+        private readonly array                  $bundleConfig,
+        private readonly ContaoCsrfTokenManager $csrfTokenManager,
+        private readonly ContaoFramework        $framework,
+        private readonly RouterInterface        $router,
+        private readonly Utils                  $utils
+    ) {}
 
     /**
      * @deprecated Remove when you can. Ported from Contao 4.13 {@link \Contao\Controller::setStaticUrls()}
@@ -66,21 +49,18 @@ class BackendController
             return;
         }
 
-        define('TL_ASSETS_URL', System::getContainer()->get('contao.assets.assets_context')->getStaticUrl());
-        define('TL_FILES_URL', System::getContainer()->get('contao.assets.files_context')->getStaticUrl());
+        define('TL_ASSETS_URL', System::getContainer()->get('contao.assets.assets_context')?->getStaticUrl());
+        define('TL_FILES_URL', System::getContainer()->get('contao.assets.files_context')?->getStaticUrl());
 
         // Deprecated since Contao 4.0, to be removed in Contao 5.0
-        define('TL_SCRIPT_URL', System::getContainer()->get('contao.assets.assets_context')->getStaticUrl());
-        define('TL_PLUGINS_URL', System::getContainer()->get('contao.assets.assets_context')->getStaticUrl());
+        define('TL_SCRIPT_URL', System::getContainer()->get('contao.assets.assets_context')?->getStaticUrl());
+        define('TL_PLUGINS_URL', System::getContainer()->get('contao.assets.assets_context')?->getStaticUrl());
     }
 
     /**
      * Renders the "request password" form.
-     *
-     * @throws \Exception
-     *
-     * @Route("/contao-be-lost-password/password/request", name="contao_backend_request_password")
      */
+    #[Route('/request', name: 'contao_backend_request_password', methods: ['GET', 'POST'])]
     public function requestPasswordAction(): Response
     {
         $this->framework->initialize();
@@ -93,7 +73,7 @@ class BackendController
         static::setStaticUrls();
 
         /** @var BackendTemplate|object $template */
-        $template = new BackendTemplate('be_request_password');
+        $template = new BackendTemplate('be_lost_password_request');
 
         $template->theme = Backend::getTheme();
         $template->messages = Message::generate();
@@ -250,9 +230,8 @@ class BackendController
 
     /**
      * Renders the "reset password" form.
-     *
-     * @Route("/contao-be-lost-password/password/reset", name="contao_backend_reset_password")
      */
+    #[Route('/reset', name: 'contao_backend_reset_password')]
     public function resetPasswordAction(Request $request): Response
     {
         // $request = $this->requestStack->getCurrentRequest();
@@ -266,7 +245,7 @@ class BackendController
         static::setStaticUrls();
 
         /** @var BackendTemplate|object $template */
-        $template = new BackendTemplate('be_reset_password');
+        $template = new BackendTemplate('be_lost_password_reset');
 
         $template->theme = Backend::getTheme();
         $template->messages = Message::generate();

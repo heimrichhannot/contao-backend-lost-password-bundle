@@ -1,0 +1,3 @@
+huh_backend_lost_password:
+    resource: "@HeimrichHannotBackendLostPasswordBundle/src/Controller/"
+    type:     annotation

@@ -1,9 +1,0 @@
-services:
-  _defaults:
-    public: true
-    autowire: true
-    bind:
-      $bundleConfig: "%huh_backend_lost_password%"
-
-  HeimrichHannot\BackendLostPasswordBundle\:
-    resource: '../../{Controller,DataContainer,EventListener,Manager}'

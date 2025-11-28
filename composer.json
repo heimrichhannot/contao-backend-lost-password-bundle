@@ -1,29 +1,31 @@
 {
-  "name": "heimrichhannot/contao-backend-lost-password-bundle",
-  "type": "contao-bundle",
-  "description": "This bundle offers a lost password function for the backend of the Contao CMS.",
-  "license": "LGPL-3.0-or-later",
-  "require": {
-    "php": "^7.4 || ^8.0",
-    "contao/core-bundle": "^4.13 || ^5.0",
-    "heimrichhannot/contao-utils-bundle": "^2.237 || ^3.3",
-    "symfony/config": "^5.4 || ^6.0 || ^7.0",
-    "symfony/dependency-injection": "^5.4 || ^6.0 || ^7.0"
-  },
-  "autoload": {
-    "psr-4": {
-      "HeimrichHannot\\BackendLostPasswordBundle\\": "src/"
+    "name": "heimrichhannot/contao-backend-lost-password-bundle",
+    "type": "contao-bundle",
+    "description": "This bundle offers a lost password function for the backend of the Contao CMS.",
+    "license": "LGPL-3.0-or-later",
+    "require": {
+        "php": "^8.3",
+        "ext-dom": "*",
+        "contao/core-bundle": "^4.13 || ^5.0",
+        "heimrichhannot/contao-utils-bundle": "^2.237 || ^3.3",
+        "symfony/config": "^5.4 || ^6.0 || ^7.0 || ^8.0",
+        "symfony/dependency-injection": "^5.4 || ^6.0 || ^7.0 || ^8.0",
+        "symfony/dom-crawler": "^5.4 || ^6.0 || ^7.0 || ^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "HeimrichHannot\\BackendLostPasswordBundle\\": "src/"
+        }
+    },
+    "extra": {
+        "contao-manager-plugin": "HeimrichHannot\\BackendLostPasswordBundle\\ContaoManager\\Plugin"
+    },
+    "require-dev": {
+        "rector/rector": "^2.1",
+        "contao/contao-rector": "dev-main",
+        "symplify/easy-coding-standard": "^12.6",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-symfony": "^2.0",
+        "contao/manager-plugin": "^2.13"
     }
-  },
-  "extra": {
-    "contao-manager-plugin": "HeimrichHannot\\BackendLostPasswordBundle\\ContaoManager\\Plugin"
-  },
-  "require-dev": {
-    "rector/rector": "^2.1",
-    "contao/contao-rector": "dev-main",
-    "symplify/easy-coding-standard": "^12.6",
-    "phpstan/phpstan": "^2.1",
-    "phpstan/phpstan-symfony": "^2.0",
-    "contao/manager-plugin": "^2.13"
-  }
 }

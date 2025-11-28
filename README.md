@@ -34,7 +34,7 @@ You can use [Notification Center](https://github.com/terminal42/contao-notificat
 ```yaml
 # config/config.yml
 huh_backend_lost_password:
-  nc_notification: 5
+    nc_notification: 5
 ```
 
 ### Usage in a custom template

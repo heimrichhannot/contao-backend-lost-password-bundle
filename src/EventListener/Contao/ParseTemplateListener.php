@@ -1,48 +1,94 @@
 <?php
 
-/**
- * @copyright Heimrich & Hannot GmbH, 2024
- * @license   LGPL-3.0-or-later
- */
-
 namespace HeimrichHannot\BackendLostPasswordBundle\EventListener\Contao;
 
-use Contao\Template;
+use Contao\CoreBundle\DependencyInjection\Attribute\AsHook;
 use HeimrichHannot\BackendLostPasswordBundle\Manager\BackendLostPasswordManager;
+use Symfony\Component\DomCrawler\Crawler;
+use Twig\Environment as TwigEnvironment;
 
-class ParseTemplateListener
+#[AsHook('parseBackendTemplate')]
+readonly class ParseTemplateListener
 {
-    /**
-     * @var BackendLostPasswordManager
-     */
-    protected $backendLostPasswordManager;
-    /**
-     * @var array
-     */
-    protected $bundleConfig;
+    public function __construct(
+        private BackendLostPasswordManager $backendLostPasswordManager,
+        private TwigEnvironment            $twig,
+        private array                      $bundleConfig
+    ) {}
 
-    public function __construct(BackendLostPasswordManager $backendLostPasswordManager, array $bundleConfig)
+    public function __invoke(string $buffer, string $template): string
     {
-        $this->backendLostPasswordManager = $backendLostPasswordManager;
-        $this->bundleConfig = $bundleConfig;
+        if ($template !== 'be_login') {
+            return $buffer;
+        }
+
+        if (!\filter_var(
+            $this->bundleConfig['add_to_template'],
+            \FILTER_VALIDATE_BOOLEAN,
+            \FILTER_NULL_ON_FAILURE
+        )) {
+            return $buffer;
+        }
+
+        $link = $this->twig->render(
+            name: '@HeimrichHannotBackendLostPassword/link_request_reset.html.twig',
+            context: [
+                'url' => $this->backendLostPasswordManager->getRequestPasswordResetUrl(),
+            ],
+        );
+
+        return $this->insertLinkAfterPasswordWidget($buffer, $link);
     }
 
-    public function __invoke(Template $template): void
+    private function insertLinkAfterPasswordWidget(string $buffer, string $link): string
     {
-        if (true !== $this->bundleConfig['add_to_template']) {
-            return;
+        if (\trim($buffer) === '') {
+            return $buffer;
         }
 
-        if ('be_login' !== $template->getName()) {
-            return;
+        $crawler = new Crawler($buffer);
+
+        $passwordNode = $crawler
+            ->filter('form.tl_login_form div.widget-password')
+            ->first();
+
+        if ($passwordNode->count() === 0) {
+            return $buffer;
         }
 
-        $messages = $this->backendLostPasswordManager->getLostPasswordLink([
-            'template' => '@ContaoBackendLostPassword/be_lost_password_link_main.html.twig'
-        ]);
+        $domElement = $passwordNode->getNode(0);
 
-        $messages .= ($template->messages ?? '');
+        if (!$domElement instanceof \DOMElement) {
+            return $buffer;
+        }
 
-        $template->messages = $messages;
+        $document = $domElement->ownerDocument;
+
+        if (!$document instanceof \DOMDocument) {
+            return $buffer;
+        }
+
+        // Build fragment from rendered Twig link HTML
+        $fragment = $document->createDocumentFragment();
+
+        if (!$fragment->appendXML($link)) {
+            // Malformed HTML in $link – fail graceful and return original buffer
+            return $buffer;
+        }
+
+        $parent      = $domElement->parentNode;
+        $nextSibling = $domElement->nextSibling;
+
+        if ($parent === null) {
+            return $buffer;
+        }
+
+        if (!$nextSibling) {
+            $parent->appendChild($fragment);
+        } else {
+            $parent->insertBefore($fragment, $nextSibling);
+        }
+
+        return $document->saveHTML();
     }
 }

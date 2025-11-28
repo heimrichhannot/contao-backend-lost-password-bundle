@@ -2,8 +2,8 @@
 
 namespace HeimrichHannot\BackendLostPasswordBundle\DataContainer;
 
+use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
 use Contao\CoreBundle\Mailer\AvailableTransports;
-use Contao\CoreBundle\ServiceAnnotation\Callback;
 
 class SettingsContainer
 {
@@ -14,9 +14,7 @@ class SettingsContainer
         $this->transports = $transports;
     }
 
-    /**
-     * @Callback(table="tl_settings", target="fields.beLostPassword_mailerTransport.options")
-     */
+    #[AsCallback('tl_settings', 'fields.beLostPassword_mailerTransport.options')]
     public function getMailerTransportOptions(): array
     {
         return $this->transports->getTransportOptions();
