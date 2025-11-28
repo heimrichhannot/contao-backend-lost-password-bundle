@@ -1,20 +1,8 @@
-#main {
-  form.tl_login_form {
-
-    .widget.lost-password {
-      text-align: right;
-      margin: 8px 0;
-    }
-  }
+form.tl_login_form .widget.lost-password {
+  text-align: right;
+  margin: 8px 0;
 }
 
-.lost-password.message-section {
-  max-width: 350px;
-  margin: -30px auto 0;
-  background: #fff;
-  border-radius: 2px;
-
-  p {
-    padding: 0 45px 45px;
-  }
+form.lost-password-form p {
+  line-height: 1.325;
 }

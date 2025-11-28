@@ -22,5 +22,6 @@ Cliquez sur le lien suivant pour définir un nouveau mot de passe:
 
 Merci.',
     'reset' => 'Réinitialiser mot de passe',
-    'resetErrorExplanation' => 'Le lien pour réinitialiser votre mot de passe est invalide ou a déjà été utilisé.'
+    'resetErrorExplanation' => 'Le lien pour réinitialiser votre mot de passe est invalide ou a déjà été utilisé.',
+    'toLogin' => 'Retour à la connexion'
 ];

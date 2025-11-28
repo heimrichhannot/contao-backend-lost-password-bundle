@@ -13,7 +13,7 @@ $lang = &$GLOBALS['TL_LANG']['MSC']['backendLostPassword'];
  */
 $lang = [
     'thankYou' => 'Thank you',
-    'request' => 'Request new password',
+    'request' => 'Request a new password',
     'requestExplanationEmail' => 'Please type in the email address or username of your Contao user here:',
     'requestLinkSentEmail' => 'If there\'s a contao user with the email address or username you typed in, you\'ll get an email with the further steps in no time.',
     'spamNote' => '<strong>IMPORTANT:</strong> If you don\'t receive an email, please take a look in the SPAM folder of your email account.',
@@ -29,4 +29,5 @@ Click the following link to set a new password:
 Thank you.',
     'reset' => 'Reset password',
     'resetErrorExplanation' => 'The link for resetting your password you just opened, is invalid or has already been used.',
+    'toLogin' => 'Back to login',
 ];

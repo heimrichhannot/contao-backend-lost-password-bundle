@@ -87,6 +87,7 @@ class ResetPasswordController extends AbstractController
         $template->submitButton = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue'] ?? 'continue');
         $template->username = $GLOBALS['TL_LANG']['tl_user']['email'][0] . '/' . $GLOBALS['TL_LANG']['tl_user']['username'][0];
         $template->requestToken = $this->csrfTokenManager->getDefaultTokenValue();
+        $template->toLogin = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['toLogin'] ?? '';
 
         $username = Input::post('username');
 

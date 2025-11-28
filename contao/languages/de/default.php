@@ -29,4 +29,5 @@ Klicken Sie auf den folgenden Link, um ein neues Passwort zu vergeben:
 Vielen Dank.',
     'reset' => 'Passwort zurücksetzen',
     'resetErrorExplanation' => 'Der Link zum Zurücksetzen Ihres Passworts, den Sie gerade aufgerufen haben, ist ungültig oder wurde bereits aufgerufen.',
+    'toLogin' => 'Zurück zum Log-In',
 ];
