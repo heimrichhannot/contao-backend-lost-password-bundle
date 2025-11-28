@@ -14,11 +14,11 @@ class Configuration implements ConfigurationInterface
             ->children()
                 ->booleanNode('add_to_template')
                     ->info('If true, that backend lost password link will be automatically added to the backed login template. Default false. Will be true in the next major version!')
-                    ->defaultFalse()
+                    ->defaultTrue()
                 ->end()
                 ?->integerNode('nc_notification')
                     ->info('The numeric ID of the notification center notification which is sent for resetting the password.')
-                    ->defaultFalse()
+                    ->defaultNull()
                 ->end()
             ?->end();
 
