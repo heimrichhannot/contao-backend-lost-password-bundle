@@ -66,9 +66,9 @@ class ResetPasswordController extends AbstractController
         $this->framework->initialize();
 
         $system = $this->framework->getAdapter(System::class);
-        $system->loadLanguageFile('default');
-        $system->loadLanguageFile('modules');
-        $system->loadLanguageFile('tl_user');
+        $system::loadLanguageFile('default');
+        $system::loadLanguageFile('modules');
+        $system::loadLanguageFile('tl_user');
 
         static::setStaticUrls();
 
@@ -240,8 +240,8 @@ class ResetPasswordController extends AbstractController
         $this->framework->initialize();
 
         $system = $this->framework->getAdapter(System::class);
-        $system->loadLanguageFile('default');
-        $system->loadLanguageFile('modules');
+        $system::loadLanguageFile('default');
+        $system::loadLanguageFile('modules');
 
         static::setStaticUrls();
 
@@ -297,10 +297,11 @@ class ResetPasswordController extends AbstractController
             if (!isset($GLOBALS['TL_DCA'][$table])) {
                 /** @var Controller $controller */
                 $controller = $this->framework->getAdapter(Controller::class);
-                $controller->loadDataContainer($table);
+                $controller::loadDataContainer($table);
             }
 
-            if (\is_array($GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'] ?? null)) {
+            if (\is_array($GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'] ?? null))
+            {
                 $dc = new DC_Table('tl_user');
                 $dc->id = $user->id;
 
