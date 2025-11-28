@@ -22,6 +22,7 @@ use Contao\Input;
 use Contao\Message;
 use Contao\StringUtil;
 use Contao\System;
+use Contao\UserModel;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use NotificationCenter\Model\Notification;
 use Symfony\Component\HttpFoundation\Request;
@@ -99,15 +100,18 @@ class ResetPasswordController extends AbstractController
         $template->successMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestLinkSentEmail'] ?? 'Success';
         $template->spamNote = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['spamNote'] ?? '';
 
-        $user = $this->utils->model()->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.email)=?'], [strtolower($username)]);
-        $user ??= $this->utils->model()->findOneModelInstanceBy('tl_user', ['LOWER(tl_user.username)=?'], [strtolower($username)]);
+        $userAdapter = $this->framework->getAdapter(UserModel::class);
+        $user = $userAdapter::findOneBy(['LOWER(tl_user.email)=?'], [strtolower($username)]);
+        $user ??= $userAdapter::findOneBy(['LOWER(tl_user.username)=?'], [strtolower($username)]);
 
         if (null === $user || !$user->email) {
             return $template->getResponse();
         }
 
         $token = 'PW' . substr(md5(uniqid(mt_rand(), true)), 2);
-        $resetRoute = $this->router->getRouteCollection()->get('contao_backend_reset_password');
+        if (!$resetRoute = $this->router->getRouteCollection()->get('contao_backend_reset_password')) {
+            throw new \RuntimeException('The route "contao_backend_reset_password" is not defined.');
+        }
 
         $resetUrl = Environment::get('url') . $resetRoute->getPath();
         $resetUrl = $this->utils->url()->addQueryStringParameterToUrl('token=' . $token, $resetUrl);
@@ -268,9 +272,9 @@ class ResetPasswordController extends AbstractController
             return $template->getResponse();
         }
 
-        $user = $this->utils->model()->findOneModelInstanceBy('tl_user', ['tl_user.backendLostPasswordActivation=?'], [$token]);
+        $userAdapter = $this->framework->getAdapter(UserModel::class);
 
-        if (null === $user) {
+        if (!$user = $userAdapter::findOneBy(['backendLostPasswordActivation=?'], [$token])) {
             $template->errorMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetErrorExplanation'];
 
             return $template->getResponse();
