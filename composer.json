@@ -6,11 +6,11 @@
     "require": {
         "php": "^8.3",
         "ext-dom": "*",
-        "contao/core-bundle": "^4.13 || ^5.0",
+        "contao/core-bundle": "^4.13 || ^5.2",
         "heimrichhannot/contao-utils-bundle": "^2.237 || ^3.3",
-        "symfony/config": "^5.4 || ^6.0 || ^7.0 || ^8.0",
-        "symfony/dependency-injection": "^5.4 || ^6.0 || ^7.0 || ^8.0",
-        "symfony/dom-crawler": "^5.4 || ^6.0 || ^7.0 || ^8.0"
+        "symfony/config": "^5.4 || ^6.0",
+        "symfony/dependency-injection": "^5.4 || ^6.0",
+        "symfony/dom-crawler": "^5.4 || ^6.0"
     },
     "autoload": {
         "psr-4": {
