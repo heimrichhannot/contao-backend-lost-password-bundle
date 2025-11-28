@@ -60,16 +60,17 @@ class ResetPasswordController extends AbstractController
 
     /**
      * Renders the "request password" form.
-     */
+     *
+     * @noinspection StaticInvocationViaThisInspection*/
     #[Route('/request', name: 'contao_backend_request_password', methods: ['GET', 'POST'])]
     public function requestPasswordAction(): Response
     {
         $this->framework->initialize();
 
         $system = $this->framework->getAdapter(System::class);
-        $system::loadLanguageFile('default');
-        $system::loadLanguageFile('modules');
-        $system::loadLanguageFile('tl_user');
+        $system->loadLanguageFile('default');
+        $system->loadLanguageFile('modules');
+        $system->loadLanguageFile('tl_user');
 
         static::setStaticUrls();
 
@@ -235,7 +236,8 @@ class ResetPasswordController extends AbstractController
 
     /**
      * Renders the "reset password" form.
-     */
+     *
+     * @noinspection StaticInvocationViaThisInspection*/
     #[Route('/reset', name: 'contao_backend_reset_password')]
     public function resetPasswordAction(Request $request): Response
     {
@@ -244,8 +246,8 @@ class ResetPasswordController extends AbstractController
         $this->framework->initialize();
 
         $system = $this->framework->getAdapter(System::class);
-        $system::loadLanguageFile('default');
-        $system::loadLanguageFile('modules');
+        $system->loadLanguageFile('default');
+        $system->loadLanguageFile('modules');
 
         static::setStaticUrls();
 
