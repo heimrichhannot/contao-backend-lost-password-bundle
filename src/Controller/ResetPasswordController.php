@@ -268,50 +268,68 @@ class ResetPasswordController extends AbstractController
         $password = $request->request->get('password');
         $confirm = $request->request->get('confirm');
 
-        if ($password !== $confirm) {
+        /** @var Controller $controller */
+        $controller = $this->framework->getAdapter(Controller::class);
+
+        if ($password !== $confirm)
+        {
             Message::addError($GLOBALS['TL_LANG']['ERR']['passwordMatch'] ?? 'Passwords don\'t match.');
-        } elseif (mb_strlen($password) < Config::get('minPasswordLength')) {
-            Message::addError(sprintf(
+
+            $controller->reload();
+        }
+
+        if (\mb_strlen($password) < Config::get('minPasswordLength'))
+        {
+            Message::addError(\sprintf(
                 $GLOBALS['TL_LANG']['ERR']['passwordLength'] ?? 'Minimum required password length is %s.',
                 Config::get('minPasswordLength')
             ));
-        } elseif (str_contains($password, $user->username)) {
-            Message::addError($GLOBALS['TL_LANG']['ERR']['passwordName'] ?? 'The password must not contain the username.');
-        } else {
-            $table = 'tl_user';
-            if (!isset($GLOBALS['TL_DCA'][$table])) {
-                /** @var Controller $controller */
-                $controller = $this->framework->getAdapter(Controller::class);
-                $controller::loadDataContainer($table);
-            }
 
-            if (\is_array($GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'] ?? null))
-            {
-                $dc = new DC_Table('tl_user');
-                $dc->id = $user->id;
-
-                foreach ($GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'] as $callback) {
-                    if (\is_array($callback)) {
-                        $callbackObj = System::importStatic($callback[0]);
-                        $password = $callbackObj->{$callback[1]}($password, $dc);
-                    } elseif (\is_callable($callback)) {
-                        $password = $callback($password, $dc);
-                    }
-                }
-            }
-
-            $user->pwChange = false;
-            $user->backendLostPasswordActivation = '';
-            $user->password = password_hash($password, \PASSWORD_DEFAULT);
-            $user->save();
-
-            Message::addConfirmation($GLOBALS['TL_LANG']['MSC']['pw_changed']
-                ?? 'The password has been changed successfully.');
-            Controller::redirect('contao');
+            $controller->reload();
         }
 
-        Controller::reload();
+        if (\str_contains($password, $user->username))
+        {
+            Message::addError($GLOBALS['TL_LANG']['ERR']['passwordName'] ?? 'The password must not contain the username.');
 
-        return $template->getResponse();
+            $controller->reload();
+        }
+
+        $table = 'tl_user';
+        if (!isset($GLOBALS['TL_DCA'][$table])) {
+            $controller->loadDataContainer($table);
+        }
+
+        ($saveCallback = $GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'] ?? null);
+
+        if (\is_callable($saveCallback)
+            || (\is_array($saveCallback) && \array_is_list($saveCallback) && \count($saveCallback) === 2))
+        {
+            $dc = new DC_Table('tl_user');
+            $dc->id = $user->id;
+
+            foreach ($GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'] as $callback)
+            {
+                if (\is_array($callback))
+                {
+                    $callbackObj = System::importStatic($callback[0]);
+                    $password = $callbackObj->{$callback[1]}($password, $dc);
+                }
+                elseif (\is_callable($callback))
+                {
+                    $password = $callback($password, $dc);
+                }
+            }
+        }
+
+        $user->pwChange = false;
+        $user->backendLostPasswordActivation = '';
+        $user->password = password_hash($password, \PASSWORD_DEFAULT);
+        $user->save();
+
+        Message::addConfirmation($GLOBALS['TL_LANG']['MSC']['pw_changed']
+            ?? 'The password has been changed successfully.');
+
+        $controller->redirect('contao');
     }
 }
