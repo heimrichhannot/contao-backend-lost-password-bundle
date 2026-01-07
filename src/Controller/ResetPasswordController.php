@@ -42,23 +42,6 @@ class ResetPasswordController extends AbstractController
     ) {}
 
     /**
-     * @deprecated Remove when you can. Ported from Contao 4.13 {@link \Contao\Controller::setStaticUrls()}
-     */
-    private static function setStaticUrls(): void
-    {
-        if (defined('TL_FILES_URL')) {
-            return;
-        }
-
-        define('TL_ASSETS_URL', System::getContainer()->get('contao.assets.assets_context')?->getStaticUrl());
-        define('TL_FILES_URL', System::getContainer()->get('contao.assets.files_context')?->getStaticUrl());
-
-        // Deprecated since Contao 4.0, to be removed in Contao 5.0
-        define('TL_SCRIPT_URL', System::getContainer()->get('contao.assets.assets_context')?->getStaticUrl());
-        define('TL_PLUGINS_URL', System::getContainer()->get('contao.assets.assets_context')?->getStaticUrl());
-    }
-
-    /**
      * Renders the "request password" form.
      *
      * @noinspection StaticInvocationViaThisInspection*/
@@ -71,8 +54,6 @@ class ResetPasswordController extends AbstractController
         $system->loadLanguageFile('default');
         $system->loadLanguageFile('modules');
         $system->loadLanguageFile('tl_user');
-
-        static::setStaticUrls();
 
         /** @var BackendTemplate|object $template */
         $template = new BackendTemplate('be_lost_password_request');
@@ -102,8 +83,8 @@ class ResetPasswordController extends AbstractController
         $template->spamNote = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['spamNote'] ?? '';
 
         $userAdapter = $this->framework->getAdapter(UserModel::class);
-        $user = $userAdapter::findOneBy(['LOWER(tl_user.email)=?'], [strtolower($username)]);
-        $user ??= $userAdapter::findOneBy(['LOWER(tl_user.username)=?'], [strtolower($username)]);
+        $user = $userAdapter->findOneBy(['LOWER(tl_user.email)=?'], [strtolower($username)]);
+        $user ??= $userAdapter->findOneBy(['LOWER(tl_user.username)=?'], [strtolower($username)]);
 
         if (null === $user || !$user->email) {
             return $template->getResponse();
@@ -249,8 +230,6 @@ class ResetPasswordController extends AbstractController
         $system->loadLanguageFile('default');
         $system->loadLanguageFile('modules');
 
-        static::setStaticUrls();
-
         /** @var BackendTemplate|object $template */
         $template = new BackendTemplate('be_lost_password_reset');
 
@@ -276,7 +255,7 @@ class ResetPasswordController extends AbstractController
 
         $userAdapter = $this->framework->getAdapter(UserModel::class);
 
-        if (!$user = $userAdapter::findOneBy(['backendLostPasswordActivation=?'], [$token])) {
+        if (!$user = $userAdapter->findOneBy(['backendLostPasswordActivation=?'], [$token])) {
             $template->errorMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetErrorExplanation'];
 
             return $template->getResponse();
