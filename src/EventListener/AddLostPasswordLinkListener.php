@@ -17,11 +17,16 @@ class AddLostPasswordLinkListener
         private readonly BackendLostPasswordManager   $backendLostPasswordManager,
         private readonly TranslatorInterface $translator,
         private readonly Environment         $twig,
+        private readonly array               $bundleConfig,
     ) {}
 
     #[AsEventListener(priority: -192)]
     public function onMenuEvent(MenuEvent $event): void
     {
+        if (true !== $this->bundleConfig['add_to_template']) {
+            return;
+        }
+
         if (version_compare(ContaoCoreBundle::getVersion(), '5.7', '<')) {
             return;
         }
@@ -47,6 +52,10 @@ class AddLostPasswordLinkListener
     #[AsHook('parseTemplate')]
     public function onParseTemplate(Template $template): void
     {
+        if (true !== $this->bundleConfig['add_to_template']) {
+            return;
+        }
+
         if (version_compare(ContaoCoreBundle::getVersion(), '5.7', '>=')) {
             return;
         }
