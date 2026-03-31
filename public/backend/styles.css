@@ -1,17 +1,3 @@
-form.tl_login_form .widget.lost-password {
-  text-align: right;
-  margin: 8px 0;
-}
-
-form.tl_login_form.lost-password-form--reset .widget {
-  margin-bottom: 12px;
-}
-
-form.tl_login_form.lost-password-form--reset .widget label {
-  display: block;
-  margin-bottom: 4px;
-}
-
-.lost-password-formbody p {
-  line-height: 1.325;
+.login-providers .lost-password {
+    margin-top: 1rem;
 }

@@ -30,7 +30,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\RouterInterface;
 
-#[Route('/contao-be-lost-password/password', defaults: ['_scope' => 'backend', '_token_check' => true])]
+#[Route('/contao/lost-password', defaults: ['_scope' => 'backend', '_token_check' => true])]
 class ResetPasswordController extends AbstractController
 {
     public function __construct(
