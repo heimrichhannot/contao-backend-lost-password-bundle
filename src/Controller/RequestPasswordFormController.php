@@ -19,6 +19,9 @@ use HeimrichHannot\UtilsBundle\Util\Utils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\UriSigner;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\RouterInterface;
 
@@ -35,11 +38,12 @@ class RequestPasswordFormController extends AbstractController
     public const NAME = 'contao_backend_request_password';
 
     public function __construct(
-        private readonly ContaoFramework $framework,
-        private readonly RouterInterface $router,
-        private readonly Utils $utils,
+        private readonly ContaoFramework        $framework,
+        private readonly RouterInterface        $router,
+        private readonly Utils                  $utils,
         private readonly ContaoCsrfTokenManager $csrfTokenManager,
-        private readonly UriSigner $uriSigner,
+        private readonly UriSigner              $uriSigner,
+        private readonly MailerInterface        $mailer
     ) {}
 
     public function __invoke(Request $request): Response
@@ -116,11 +120,40 @@ class RequestPasswordFormController extends AbstractController
 //        if (class_exists(Notification::class) && $notificationId = $this->bundleConfig['nc_notification'] ?? 0) {
 //            $this->sendResetNotification($notificationId, $user, $resetUrl);
 //        } else {
-//            $this->sendResetEmail($resetUrl, $user->email);
+        $this->sendResetEmail($resetUrl, $user->email);
 //        }
 
         $this->utils->container()->log("A new password has been requested for backend user ID {$user->id} ({$user->email})", __METHOD__, 'ACCESS');
 
         return $template->getResponse();
+    }
+
+    /**
+     * @throws \Exception
+     */
+    protected function sendResetEmail(string $resetUrl, string $to): void
+    {
+        $email = (new Email())
+            ->from(
+                new Address(
+                    Config::get('adminEmail'),
+                    Config::get('websiteTitle')
+                )
+            )
+            ->to($to)
+            ->subject($GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageSubjectResetPassword'] ?? 'Reset Password')
+            ->text(
+                str_replace(
+                    '##reset_url##',
+                    $resetUrl,
+                    $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageBodyResetPassword'] ?? 'Reset: ##reset_url##'
+                )
+            );
+
+        if ($transport = Config::get('beLostPassword_mailerTransport')) {
+            $email->getHeaders()->addTextHeader('X-Transport', $transport);
+        }
+
+        $this->mailer->send($email);
     }
 }

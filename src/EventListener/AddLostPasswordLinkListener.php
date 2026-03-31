@@ -13,14 +13,14 @@ use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 
-class AddLostPasswordLinkListener
+readonly class AddLostPasswordLinkListener
 {
     public function __construct(
-        private readonly TranslatorInterface $translator,
-        private readonly Environment         $twig,
-        private readonly array               $bundleConfig,
-        private readonly UriSigner $uriSigner,
-        private readonly RouterInterface $router,
+        private TranslatorInterface $translator,
+        private Environment         $twig,
+        private array               $bundleConfig,
+        private UriSigner           $uriSigner,
+        private RouterInterface     $router,
     ) {}
 
     #[AsEventListener(priority: -192)]
