@@ -3,6 +3,7 @@
 namespace HeimrichHannot\BackendLostPasswordBundle\Manager;
 
 use Contao\Environment;
+use HeimrichHannot\BackendLostPasswordBundle\Controller\RequestPasswordFormController;
 use Symfony\Component\Routing\RouterInterface;
 
 readonly class BackendLostPasswordManager
@@ -16,8 +17,8 @@ readonly class BackendLostPasswordManager
      */
     public function getRequestPasswordResetUrl(): string
     {
-        if (!$requestRoute = $this->router->getRouteCollection()->get('contao_backend_request_password')) {
-            throw new \RuntimeException('The route "contao_backend_request_password" is not defined.');
+        if (!$requestRoute = $this->router->getRouteCollection()->get(RequestPasswordFormController::NAME)) {
+            throw new \RuntimeException('The route "'.RequestPasswordFormController::NAME.'" is not defined.');
         }
 
         return Environment::get('url') . $requestRoute->getPath();

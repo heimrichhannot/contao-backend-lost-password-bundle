@@ -6,18 +6,21 @@ use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsHook;
 use Contao\CoreBundle\Event\MenuEvent;
 use Contao\Template;
-use HeimrichHannot\BackendLostPasswordBundle\Manager\BackendLostPasswordManager;
+use HeimrichHannot\BackendLostPasswordBundle\Controller\RequestPasswordFormController;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
+use Symfony\Component\HttpFoundation\UriSigner;
+use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 
 class AddLostPasswordLinkListener
 {
     public function __construct(
-        private readonly BackendLostPasswordManager   $backendLostPasswordManager,
         private readonly TranslatorInterface $translator,
         private readonly Environment         $twig,
         private readonly array               $bundleConfig,
+        private readonly UriSigner $uriSigner,
+        private readonly RouterInterface $router,
     ) {}
 
     #[AsEventListener(priority: -192)]
@@ -42,7 +45,7 @@ class AddLostPasswordLinkListener
         $node = $factory
             ->createItem('lost-password')
             ->setLabel($this->translator->trans('huh.backend_lost_password.misc.lost_password'))
-            ->setUri($this->backendLostPasswordManager->getRequestPasswordResetUrl())
+            ->setUri($this->requestPasswordUrl())
             ->setAttribute('class', 'lost-password')
             ->setExtra('translation_domain', false);
 
@@ -67,11 +70,22 @@ class AddLostPasswordLinkListener
         $messages = $this->twig->render(
             name: '@Contao/backend/lost_password_link.html.twig',
             context: [
-                'url' => $this->backendLostPasswordManager->getRequestPasswordResetUrl(),
+                'url' => $this->requestPasswordUrl(),
             ],
         );
 
         $messages .= ($template->messages ?? '');
         $template->messages = $messages;
+    }
+
+    private function requestPasswordUrl(): string
+    {
+        $url = $this->router->generate(RequestPasswordFormController::NAME, referenceType: RouterInterface::ABSOLUTE_URL);
+        /**
+         * Time parameter is added in symfony 7.1, make link only valid one hour
+         *
+         * @noinspection PhpMethodParametersCountMismatchInspection
+         */
+        return $this->uriSigner->sign($url, new \DateTimeImmutable('+1 hour'));
     }
 }

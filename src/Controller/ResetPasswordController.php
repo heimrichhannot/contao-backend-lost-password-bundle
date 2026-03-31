@@ -30,7 +30,12 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\RouterInterface;
 
-#[Route('/contao/lost-password', defaults: ['_scope' => 'backend', '_token_check' => true])]
+#[Route(
+    path: '%contao.backend.route_prefix%/lost-password',
+    defaults: [
+        '_scope' => 'backend',
+    ]
+)]
 class ResetPasswordController extends AbstractController
 {
     public function __construct(
@@ -45,7 +50,7 @@ class ResetPasswordController extends AbstractController
      * Renders the "request password" form.
      *
      * @noinspection StaticInvocationViaThisInspection*/
-    #[Route('/request', name: 'contao_backend_request_password', methods: ['GET', 'POST'])]
+//    #[Route('/request', name: 'contao_backend_request_password', methods: ['GET', 'POST'])]
     public function requestPasswordAction(): Response
     {
         $this->framework->initialize();
