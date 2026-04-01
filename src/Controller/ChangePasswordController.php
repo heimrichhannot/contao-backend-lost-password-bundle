@@ -102,6 +102,8 @@ class ChangePasswordController extends AbstractController
                 'inputType' => 'password',
                 'eval' => [
                     'mandatory' => true,
+                    'minlength'=>Config::get('minPasswordLength'),
+                    'tl_class' => 'tl_text',
                 ]
             ],
             'confirm' => [
@@ -109,6 +111,8 @@ class ChangePasswordController extends AbstractController
                 'inputType' => 'password',
                 'eval' => [
                     'mandatory' => true,
+                    'minlength'=>Config::get('minPasswordLength'),
+                    'tl_class' => 'tl_text',
                 ]
             ],
         ];
