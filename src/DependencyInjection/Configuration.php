@@ -16,11 +16,7 @@ class Configuration implements ConfigurationInterface
                     ->info('If true, that backend lost password link will be automatically added to the backed login template. Default false. Will be true in the next major version!')
                     ->defaultTrue()
                 ->end()
-                ?->integerNode('nc_notification')
-                    ->info('The numeric ID of the notification center notification which is sent for resetting the password.')
-                    ->defaultNull()
-                ->end()
-            ?->end();
+            ->end();
 
         return $treeBuilder;
     }

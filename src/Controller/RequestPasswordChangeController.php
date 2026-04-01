@@ -9,6 +9,9 @@ use Contao\CoreBundle\Controller\AbstractController;
 use Contao\CoreBundle\Csrf\ContaoCsrfTokenManager;
 use Contao\CoreBundle\Exception\AccessDeniedException;
 use Contao\CoreBundle\Framework\ContaoFramework;
+use Contao\CoreBundle\Monolog\ContaoContext;
+use Contao\CoreBundle\OptIn\OptIn;
+use Contao\CoreBundle\String\SimpleTokenParser;
 use Contao\Environment;
 use Contao\Input;
 use Contao\Message;
@@ -22,8 +25,11 @@ use Symfony\Component\HttpFoundation\UriSigner;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Terminal42\NotificationCenterBundle\NotificationCenter;
 
 #[Route(
     path: '%contao.backend.route_prefix%/lost-password/request',
@@ -33,9 +39,11 @@ use Symfony\Component\Routing\RouterInterface;
     ],
     methods: ['GET', 'POST']
 )]
-class RequestPasswordFormController extends AbstractController
+class RequestPasswordChangeController extends AbstractController
 {
-    public const NAME = 'contao_backend_request_password';
+    public const NAME = 'contao_backend_request_password_change';
+
+    public const TOKEN_PREFIX = 'rpw';
 
     public function __construct(
         private readonly ContaoFramework        $framework,
@@ -43,7 +51,12 @@ class RequestPasswordFormController extends AbstractController
         private readonly Utils                  $utils,
         private readonly ContaoCsrfTokenManager $csrfTokenManager,
         private readonly UriSigner              $uriSigner,
-        private readonly MailerInterface        $mailer
+        private readonly MailerInterface        $mailer,
+        private readonly ?NotificationCenter    $notificationCenter,
+        private readonly RateLimiterFactory     $rateLimiterFactory,
+        private readonly TranslatorInterface    $translator,
+        private readonly OptIn                  $optIn,
+        private readonly SimpleTokenParser     $tokenParser,
     ) {}
 
     public function __invoke(Request $request): Response
@@ -56,7 +69,7 @@ class RequestPasswordFormController extends AbstractController
 
         $template = $this->createLegacyTemplate();
 
-        return $this->handleRequest($template);
+        return $this->handleRequest($template, $request);
     }
 
     private function createLegacyTemplate(): BackendTemplate
@@ -86,7 +99,7 @@ class RequestPasswordFormController extends AbstractController
         return $template;
     }
 
-    private function handleRequest(BackendTemplate $template): Response
+    private function handleRequest(BackendTemplate $template, Request $request): Response
     {
         $username = Input::post('username');
 
@@ -106,33 +119,44 @@ class RequestPasswordFormController extends AbstractController
             return $template->getResponse();
         }
 
-        $token = 'PW' . substr(md5(uniqid(mt_rand(), true)), 2);
-        if (!$resetRoute = $this->router->getRouteCollection()->get('contao_backend_reset_password')) {
-            throw new \RuntimeException('The route "contao_backend_reset_password" is not defined.');
-        }
+//        $limiter = $this->rateLimiterFactory->create($user->id);
 
-        $resetUrl = Environment::get('url') . $resetRoute->getPath();
-        $resetUrl = $this->utils->url()->addQueryStringParameterToUrl('token=' . $token, $resetUrl);
-
-        $user->backendLostPasswordActivation = $token;
-        $user->save();
-//
-//        if (class_exists(Notification::class) && $notificationId = $this->bundleConfig['nc_notification'] ?? 0) {
-//            $this->sendResetNotification($notificationId, $user, $resetUrl);
-//        } else {
-        $this->sendResetEmail($resetUrl, $user->email);
+//        if (!$limiter->consume()->isAccepted()) {
+//            throw new \RuntimeException($this->translator->trans('MSC.tooManyPasswordResetAttempts', domain: 'contao_default'));
 //        }
 
-        $this->utils->container()->log("A new password has been requested for backend user ID {$user->id} ({$user->email})", __METHOD__, 'ACCESS');
+        $this->sendResetEmail($request, $user);
+
+        $this->utils->container()->log(
+            "A new password has been requested for backend user ID {$user->id} ({$user->email})",
+            __METHOD__,
+            ContaoContext::ACCESS,
+        );
 
         return $template->getResponse();
     }
 
-    /**
-     * @throws \Exception
-     */
-    protected function sendResetEmail(string $resetUrl, string $to): void
+    private function sendResetEmail(Request $request, UserModel $user): void
     {
+        $optInToken = $this->optIn->create(self::TOKEN_PREFIX, $user->email, array('tl_user' => array($user->id)));
+
+        $resetUrl = $this->router->generate(
+            name: ChangePasswordController::NAME,
+            parameters: ['token' => $optInToken->getIdentifier()],
+            referenceType: RouterInterface::ABSOLUTE_URL,
+        );
+
+        if (true === $this->sendPerNotificationCenter($request, $user, $resetUrl)) {
+            return;
+        }
+
+        $text = $this->translator->trans(
+            id: 'MSC.backendLostPassword.messageBodyResetPassword',
+            parameters: ['##reset_url##' => $resetUrl],
+            domain: 'contao_default'
+        );
+        $text = $this->tokenParser->parse($text, ['reset_url' => $resetUrl]);
+
         $email = (new Email())
             ->from(
                 new Address(
@@ -140,20 +164,46 @@ class RequestPasswordFormController extends AbstractController
                     Config::get('websiteTitle')
                 )
             )
-            ->to($to)
-            ->subject($GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageSubjectResetPassword'] ?? 'Reset Password')
-            ->text(
-                str_replace(
-                    '##reset_url##',
-                    $resetUrl,
-                    $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageBodyResetPassword'] ?? 'Reset: ##reset_url##'
+            ->to($user->email)
+            ->subject(
+                $this->translator->trans(
+                    id: 'MSC.backendLostPassword.messageSubjectResetPassword',
+                    domain: 'contao_default'
                 )
-            );
+            )
+            ->text($text);
 
         if ($transport = Config::get('beLostPassword_mailerTransport')) {
             $email->getHeaders()->addTextHeader('X-Transport', $transport);
         }
 
         $this->mailer->send($email);
+    }
+
+    private function sendPerNotificationCenter(Request $request, UserModel $user, string $resetUrl): bool
+    {
+        if (null === $this->notificationCenter) {
+            return false;
+        }
+
+        $notification = (int)Config::get('beLostPassword_nc');
+        if ($notification < 1) {
+            return false;
+        }
+
+        $tokens = [
+            'user_id' => $user->id,
+            'user_email' => $user->email,
+            'user_username' => $user->username,
+            'user_name' => $user->name,
+        ];
+
+        $tokens['recipient_email'] = $user->email;
+        $tokens['domain'] = $request->getHttpHost();
+        $tokens['link'] = $resetUrl;
+
+        $this->notificationCenter->sendNotification($notification, $tokens);
+
+        return true;
     }
 }

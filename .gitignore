@@ -6,3 +6,4 @@ Thumbs.db
 /component
 composer.lock
 composer.json~
+.codex

@@ -6,7 +6,7 @@ use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsHook;
 use Contao\CoreBundle\Event\MenuEvent;
 use Contao\Template;
-use HeimrichHannot\BackendLostPasswordBundle\Controller\RequestPasswordFormController;
+use HeimrichHannot\BackendLostPasswordBundle\Controller\RequestPasswordChangeController;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\UriSigner;
 use Symfony\Component\Routing\RouterInterface;
@@ -80,7 +80,7 @@ readonly class AddLostPasswordLinkListener
 
     private function requestPasswordUrl(): string
     {
-        $url = $this->router->generate(RequestPasswordFormController::NAME, referenceType: RouterInterface::ABSOLUTE_URL);
+        $url = $this->router->generate(RequestPasswordChangeController::NAME, referenceType: RouterInterface::ABSOLUTE_URL);
         /**
          * Time parameter is added in symfony 7.1, make link only valid one hour
          *
