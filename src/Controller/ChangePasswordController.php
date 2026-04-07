@@ -100,6 +100,7 @@ class ChangePasswordController extends AbstractController
             'password' => [
                 'label' => &$GLOBALS['TL_LANG']['MSC']['password'],
                 'inputType' => 'password',
+                'name' => 'password',
                 'eval' => [
                     'mandatory' => true,
                     'minlength'=>Config::get('minPasswordLength'),
@@ -109,6 +110,7 @@ class ChangePasswordController extends AbstractController
             'confirm' => [
                 'label' => &$GLOBALS['TL_LANG']['MSC']['confirm'],
                 'inputType' => 'password',
+                'name' => 'confirm',
                 'eval' => [
                     'mandatory' => true,
                     'minlength'=>Config::get('minPasswordLength'),
@@ -117,6 +119,8 @@ class ChangePasswordController extends AbstractController
             ],
         ];
 
+        $strFields = '';
+        $doNotSubmit = false;
         // Initialize the widgets
         foreach ($fields as $arrField)
         {
