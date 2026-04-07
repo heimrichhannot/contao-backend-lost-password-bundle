@@ -3,9 +3,10 @@
 namespace HeimrichHannot\BackendLostPasswordBundle\EventListener\DataContainer\Settings;
 
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
+use HeimrichHannot\BackendLostPasswordBundle\NotificationCenter\LostPasswordNotificationType;
 use Terminal42\NotificationCenterBundle\NotificationCenter;
 
-#[AsCallback('tl_settings', 'fields.beLostPassword_mailerTransport.options')]
+#[AsCallback('tl_settings', 'fields.beLostPassword_nc.options')]
 class FieldsNcOptionsListener
 {
     public function __construct(
@@ -17,6 +18,6 @@ class FieldsNcOptionsListener
         if (null === $this->notificationCenter) {
             return [];
         }
-        return $this->notificationCenter->getNotificationsForNotificationType('contao_core');
+        return $this->notificationCenter->getNotificationsForNotificationType(LostPasswordNotificationType::NAME);
     }
 }
