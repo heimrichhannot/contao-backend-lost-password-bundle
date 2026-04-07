@@ -30,6 +30,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Terminal42\NotificationCenterBundle\NotificationCenter;
+use Twig\Markup;
 
 #[Route(
     path: '%contao.backend.route_prefix%/lost-password/request',
@@ -80,7 +81,7 @@ class RequestPasswordChangeController extends AbstractController
         $system->loadLanguageFile('tl_user');
 
         /** @var BackendTemplate|object $template */
-        $template = new BackendTemplate('be_lost_password_request');
+        $template = new BackendTemplate('backend/lost_password/request');
 
         $template->theme = Backend::getTheme();
         $template->messages = Message::generate();
@@ -95,6 +96,8 @@ class RequestPasswordChangeController extends AbstractController
         $template->username = $GLOBALS['TL_LANG']['tl_user']['email'][0] . '/' . $GLOBALS['TL_LANG']['tl_user']['username'][0];
         $template->requestToken = $this->csrfTokenManager->getDefaultTokenValue();
         $template->toLogin = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['toLogin'] ?? '';
+        $template->host = Backend::getDecodedHostname();
+        $template->jsDisabled = $GLOBALS['TL_LANG']['MSC']['jsDisabled'];
 
         return $template;
     }
@@ -129,9 +132,13 @@ class RequestPasswordChangeController extends AbstractController
             return $template->getResponse();
         }
 
+        $template->setName('backend/lost_password/message_sent');
         $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['thankYou'] ?? '';
         $template->successMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestLinkSentEmail'] ?? 'Success';
-        $template->spamNote = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['spamNote'] ?? '';
+        $template->spamNote = new Markup(
+            $this->translator->trans('MSC.backendLostPassword.spamNote', domain: 'contao_default'),
+            'UTF-8'
+        );
 
         $this->utils->container()->log(
             "A new password has been requested for backend user ID {$user->id} ({$user->email})",
@@ -167,17 +174,12 @@ class RequestPasswordChangeController extends AbstractController
         );
         $text = $this->tokenParser->parse($text, ['reset_url' => $resetUrl]);
 
-        if (!empty($GLOBALS['TL_ADMIN_EMAIL']))
-        {
+        if (!empty($GLOBALS['TL_ADMIN_EMAIL'])) {
             $from = new Address($GLOBALS['TL_ADMIN_EMAIL'], $GLOBALS['TL_ADMIN_NAME']);
-        }
-        elseif ($adminEmail = Config::get('adminEmail'))
-        {
+        } elseif ($adminEmail = Config::get('adminEmail')) {
             $split = StringUtil::splitFriendlyEmail($adminEmail);
             $from = new Address($split[1], $split[0]);
-        }
-        else
-        {
+        } else {
             throw new \Exception('No administrator e-mail address has been set.');
         }
 

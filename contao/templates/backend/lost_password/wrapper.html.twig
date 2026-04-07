@@ -1,0 +1,28 @@
+{% extends '@Contao/be_login' %}
+
+{% block head %}
+    {{ parent() }}
+    {% block styles %}
+        <style>
+            .huh_blp_links_container {
+                display: flex;
+                justify-content: center;
+                margin-top: 1rem;
+            }
+        </style>
+    {% endblock %}
+{% endblock %}
+
+{% block container %}
+    <div id="container">
+        <main id="main">
+            {% block content %}
+            {% endblock %}
+        </main>
+        {{ messages|raw }}
+        <div class="huh_blp_links_container">
+            {% block links %}
+            {% endblock %}
+        </div>
+    </div>
+{% endblock %}

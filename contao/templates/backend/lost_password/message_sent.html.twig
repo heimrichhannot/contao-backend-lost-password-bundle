@@ -1,0 +1,26 @@
+{% extends '@Contao/be_login' %}
+
+{% block head %}
+    {{ parent() }}
+    {% include '@Contao/backend/lost_password/_styles.html.twig' %}
+{% endblock %}
+
+{% block container %}
+    <div id="container">
+        <main id="main">
+            {% block content %}
+                <div class="formbody lost-password-formbody">
+                    <h1>{{ headline }}</h1>
+                    <p>{{ successMessage }}</p>
+                    <p>{{ spamNote }}</p>
+                </div>
+            {% endblock %}
+        </main>
+        {{ messages|raw }}
+        <div class="huh_blp_links_container">
+            {% block links %}
+                <a href="{{ path('contao_backend_login') }}">{{ toLogin }} ›</a>
+            {% endblock %}
+        </div>
+    </div>
+{% endblock %}
