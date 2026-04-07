@@ -56,7 +56,7 @@ class RequestPasswordChangeController extends AbstractController
         private readonly RateLimiterFactory     $rateLimiterFactory,
         private readonly TranslatorInterface    $translator,
         private readonly OptIn                  $optIn,
-        private readonly SimpleTokenParser     $tokenParser,
+        private readonly SimpleTokenParser      $tokenParser,
     ) {}
 
     public function __invoke(Request $request): Response
@@ -107,10 +107,6 @@ class RequestPasswordChangeController extends AbstractController
             return $template->getResponse();
         }
 
-        $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['thankYou'] ?? '';
-        $template->successMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestLinkSentEmail'] ?? 'Success';
-        $template->spamNote = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['spamNote'] ?? '';
-
         $userAdapter = $this->framework->getAdapter(UserModel::class);
         $user = $userAdapter->findOneBy(['LOWER(tl_user.email)=?'], [strtolower($username)]);
         $user ??= $userAdapter->findOneBy(['LOWER(tl_user.username)=?'], [strtolower($username)]);
@@ -125,7 +121,17 @@ class RequestPasswordChangeController extends AbstractController
 //            throw new \RuntimeException($this->translator->trans('MSC.tooManyPasswordResetAttempts', domain: 'contao_default'));
 //        }
 
-        $this->sendResetEmail($request, $user);
+        try {
+            $this->sendResetEmail($request, $user);
+        } catch (\Exception $e) {
+            Message::addError($e->getMessage());
+            $template->messages = Message::generate();
+            return $template->getResponse();
+        }
+
+        $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['thankYou'] ?? '';
+        $template->successMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestLinkSentEmail'] ?? 'Success';
+        $template->spamNote = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['spamNote'] ?? '';
 
         $this->utils->container()->log(
             "A new password has been requested for backend user ID {$user->id} ({$user->email})",
@@ -150,6 +156,10 @@ class RequestPasswordChangeController extends AbstractController
             return;
         }
 
+        $subject = $this->translator->trans(
+            id: 'MSC.backendLostPassword.messageSubjectResetPassword',
+            domain: 'contao_default'
+        );
         $text = $this->translator->trans(
             id: 'MSC.backendLostPassword.messageBodyResetPassword',
             parameters: ['##reset_url##' => $resetUrl],
@@ -157,20 +167,24 @@ class RequestPasswordChangeController extends AbstractController
         );
         $text = $this->tokenParser->parse($text, ['reset_url' => $resetUrl]);
 
+        if (!empty($GLOBALS['TL_ADMIN_EMAIL']))
+        {
+            $from = new Address($GLOBALS['TL_ADMIN_EMAIL'], $GLOBALS['TL_ADMIN_NAME']);
+        }
+        elseif ($adminEmail = Config::get('adminEmail'))
+        {
+            $split = StringUtil::splitFriendlyEmail($adminEmail);
+            $from = new Address($split[1], $split[0]);
+        }
+        else
+        {
+            throw new \Exception('No administrator e-mail address has been set.');
+        }
+
         $email = (new Email())
-            ->from(
-                new Address(
-                    Config::get('adminEmail'),
-                    Config::get('websiteTitle')
-                )
-            )
+            ->from($from)
             ->to($user->email)
-            ->subject(
-                $this->translator->trans(
-                    id: 'MSC.backendLostPassword.messageSubjectResetPassword',
-                    domain: 'contao_default'
-                )
-            )
+            ->subject($subject)
             ->text($text);
 
         if ($transport = Config::get('beLostPassword_mailerTransport')) {
