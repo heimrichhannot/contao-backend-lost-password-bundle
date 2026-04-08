@@ -2,21 +2,16 @@
 
 namespace HeimrichHannot\BackendLostPasswordBundle\Controller;
 
-use Contao\Backend;
 use Contao\BackendTemplate;
 use Contao\Config;
-use Contao\CoreBundle\Controller\AbstractController;
-use Contao\CoreBundle\Csrf\ContaoCsrfTokenManager;
 use Contao\CoreBundle\Exception\AccessDeniedException;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\CoreBundle\OptIn\OptIn;
 use Contao\CoreBundle\String\SimpleTokenParser;
-use Contao\Environment;
 use Contao\Input;
 use Contao\Message;
 use Contao\StringUtil;
-use Contao\System;
 use Contao\UserModel;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use Symfony\Component\HttpFoundation\Request;
@@ -79,7 +74,7 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
         $username = Input::post('username');
 
         if ('tl_request_password' !== Input::post('FORM_SUBMIT') || !$username) {
-            return $template->getResponse();
+            return $this->createTemplateResponse($template);
         }
 
         $userAdapter = $this->framework->getAdapter(UserModel::class);
@@ -87,7 +82,7 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
         $user ??= $userAdapter->findOneBy(['LOWER(tl_user.username)=?'], [strtolower($username)]);
 
         if (null === $user || !$user->email) {
-            return $template->getResponse();
+            return $this->createTemplateResponse($template);
         }
 
 //        $limiter = $this->rateLimiterFactory->create($user->id);
@@ -101,7 +96,7 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
         } catch (\Exception $e) {
             Message::addError($e->getMessage());
             $template->messages = Message::generate();
-            return $template->getResponse();
+            return $this->createTemplateResponse($template);
         }
 
         $template->setName('backend/lost_password/message_sent');
@@ -118,7 +113,7 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
             ContaoContext::ACCESS,
         );
 
-        return $template->getResponse();
+        return $this->createTemplateResponse($template);
     }
 
     private function sendResetEmail(Request $request, UserModel $user): void

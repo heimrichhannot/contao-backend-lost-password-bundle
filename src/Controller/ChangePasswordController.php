@@ -16,9 +16,11 @@ use Contao\CoreBundle\Csrf\ContaoCsrfTokenManager;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\OptIn\OptIn;
 use Contao\CoreBundle\OptIn\OptInToken;
+use Contao\CoreBundle\OptIn\OptInTokenInterface;
 use Contao\DC_Table;
 use Contao\Email;
 use Contao\Environment;
+use Contao\FormPassword;
 use Contao\Idna;
 use Contao\Input;
 use Contao\Message;
@@ -66,65 +68,42 @@ class ChangePasswordController extends AbstractLostPasswordController
         $strFormId = 'tl_reset_password';
         $submitted = $strFormId === $request->request->get('FORM_SUBMIT');
 
-//        if (!$submitted) {
-//            try {
-//                $user = $this->loadUserFromRequestToken($request);
-//            } catch (\Exception $e) {
-//                $template->errorMessage = $this->translator->trans(
-//                    'MSC.backendLostPassword.resetErrorExplanation',
-//                    domain: 'contao_default'
-//                );
-//                return $template->getResponse();
-//            }
-//
-//            if ('tl_reset_password' !== $request->request->get('FORM_SUBMIT')) {
-//                return $template->getResponse();
-//            }
-//        }
+        if (!$submitted) {
+            try {
+                $token = $this->fetchToken($request);
+                $user = $this->loadUserFromRequestToken($token);
+            } catch (\Exception $e) {
+                Message::addError($e->getMessage());
 
-        $fields = [
-            'password' => [
-                'label' => &$GLOBALS['TL_LANG']['MSC']['password'],
-                'inputType' => 'password',
-                'name' => 'password',
-                'eval' => [
-                    'mandatory' => true,
-                    'minlength' => Config::get('minPasswordLength'),
-                    'tl_class' => 'tl_text',
-                ],
-                'class' => 'tl_text',
-            ],
-            'password_confirm' => [
-                'label' => &$GLOBALS['TL_LANG']['MSC']['confirm'],
-                'inputType' => 'password',
-                'name' => 'password_confirm',
-                'eval' => [
-                    'mandatory' => true,
-                    'minlength' => Config::get('minPasswordLength'),
-                    'tl_class' => 'tl_text',
-                ]
-            ],
-        ];
+                $template->errorMessage = $this->translator->trans(
+                    'MSC.backendLostPassword.resetErrorExplanation',
+                    domain: 'contao_default'
+                );
+                return $this->createTemplateResponse($template);
+            }
+        }
 
-        $strFields = '';
+        $passwordField = $this->createPasswordField([
+            'label' => &$GLOBALS['TL_LANG']['MSC']['password'],
+            'name' => 'password',
+        ]);
+        $confirmField = $this->createPasswordField([
+            'label' => &$GLOBALS['TL_LANG']['MSC']['confirm'],
+            'name' => 'password_confirm',
+        ]);
+
+
+        $fields = [$passwordField, $confirmField];
+        $template->fields = $fields;
+
+        if (!$submitted) {
+            return $this->createTemplateResponse($template);
+        }
+
         $doNotSubmit = false;
         // Initialize the widgets
-        foreach ($fields as $arrField)
+        foreach ($fields as $objWidget)
         {
-            /** @var class-string<Widget> $strClass */
-            $strClass = $GLOBALS['TL_FFL'][$arrField['inputType']] ?? null;
-
-            // Continue if the class is not defined
-            if (!class_exists($strClass))
-            {
-                continue;
-            }
-
-            $arrField['eval']['required'] = $arrField['eval']['mandatory'] ?? null;
-
-            $objWidget = new $strClass($strClass::getAttributesFromDca($arrField, $arrField['name']));
-            $objWidget->storeValues = true;
-
             // Validate the widget
             if ($submitted)
             {
@@ -139,10 +118,24 @@ class ChangePasswordController extends AbstractLostPasswordController
             $widgets[] = $objWidget;
         }
 
-        $template->fields = $widgets;
-        $template->hasError = $doNotSubmit;
+        if ($doNotSubmit) {
+            foreach ($widgets as $widget) {
+                if ($widget->hasErrors()) {
+                    Message::addError($widget->getErrorAsString());
+                }
+            }
+            return $this->redirect($request->getUri());
+        }
 
-        return $template->getResponse();
+        if ($passwordField->value !== $confirmField->value) {
+            Message::addError($GLOBALS['TL_LANG']['ERR']['passwordMatch'] ?? 'Passwords don\'t match.');
+            return $this->redirect($request->getUri());
+        }
+
+        $template->hasError = $doNotSubmit;
+        $template->messages = Message::generate();
+
+        return $this->createTemplateResponse($template);
 
 
         $password = $request->request->get('password');
@@ -208,7 +201,23 @@ class ChangePasswordController extends AbstractLostPasswordController
         $controller->redirect('contao');
     }
 
-    private function loadUserFromRequestToken(Request $request): UserModel
+    private function createPasswordField(array $field): FormPassword
+    {
+        $field = array_merge([
+            'inputType' => 'password',
+            'eval' => [
+                'required' => true,
+                'minlength' => Config::get('minPasswordLength'),
+            ],
+        ], $field);
+
+        $objWidget = new FormPassword(FormPassword::getAttributesFromDca($field, $field['name']));
+        $objWidget->storeValues = true;
+
+        return $objWidget;
+    }
+
+    private function fetchToken(Request $request): OptInTokenInterface
     {
         $tokenIdentifier = $request->query->get('token');
         if (null === $tokenIdentifier || !str_starts_with($tokenIdentifier, RequestPasswordChangeController::TOKEN_PREFIX)) {
@@ -224,6 +233,11 @@ class ChangePasswordController extends AbstractLostPasswordController
             throw new \Exception($this->translator->trans('MSC.invalidToken', domain: 'contao_default'));
         }
 
+        return $token;
+    }
+
+    private function loadUserFromRequestToken(OptInTokenInterface $token): UserModel
+    {
         $arrRelated = $token->getRelatedRecords();
 
         if (\count($arrRelated) != 1 || key($arrRelated) != 'tl_user' || \count($arrIds = current($arrRelated)) != 1 || (!$userModel = UserModel::findById($arrIds[0]))) {

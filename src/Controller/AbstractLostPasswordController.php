@@ -12,6 +12,7 @@ use Contao\Environment;
 use Contao\Message;
 use Contao\StringUtil;
 use Contao\System;
+use Symfony\Component\HttpFoundation\Response;
 
 abstract class AbstractLostPasswordController extends AbstractController
 {
@@ -25,7 +26,6 @@ abstract class AbstractLostPasswordController extends AbstractController
         $template = new BackendTemplate($templateName);
 
         $template->theme = Backend::getTheme();
-        $template->messages = Message::generate();
         $template->base = Environment::get('base');
         $template->language = $GLOBALS['TL_LANGUAGE'] ?? 'en';
         $template->title = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pw_new'] ?? '');
@@ -42,13 +42,23 @@ abstract class AbstractLostPasswordController extends AbstractController
 
         $template->attributes = (new HtmlAttributes())->addClass($class);
 
-
-//        $template->username = $GLOBALS['TL_LANG']['tl_user']['email'][0] . '/' . $GLOBALS['TL_LANG']['tl_user']['username'][0];
+        $template->username = $GLOBALS['TL_LANG']['tl_user']['email'][0] . '/' . $GLOBALS['TL_LANG']['tl_user']['username'][0];
         $template->requestToken = $this->container->get('contao.csrf.token_manager')->getDefaultTokenValue();
         $template->toLogin = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['toLogin'] ?? '';
         $template->host = Backend::getDecodedHostname();
         $template->jsDisabled = $GLOBALS['TL_LANG']['MSC']['jsDisabled'];
+        $template->submitButton = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue'] ?? '');
 
         return $template;
+    }
+
+    protected function createTemplateResponse(BackendTemplate $template): Response
+    {
+        if (Message::hasMessages()) {
+            $template->messages = 'HAS'.Message::generate();
+        } else {
+            $template->messages = 'NO';
+        }
+        return $template->getResponse();
     }
 }
