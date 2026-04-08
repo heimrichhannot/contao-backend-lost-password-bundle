@@ -12,6 +12,7 @@ use Contao\Environment;
 use Contao\Message;
 use Contao\StringUtil;
 use Contao\System;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 abstract class AbstractLostPasswordController extends AbstractController
@@ -52,13 +53,22 @@ abstract class AbstractLostPasswordController extends AbstractController
         return $template;
     }
 
-    protected function createTemplateResponse(BackendTemplate $template): Response
+    protected function createTemplateResponse(BackendTemplate $template, Request $request): Response
     {
+        if ($request->hasSession()) {
+            $session = $request->getSession();
+
+            if (!$session->isStarted()) {
+                $session->start();
+            }
+        }
+
         if (Message::hasMessages()) {
             $template->messages = Message::generate();
         } else {
             $template->messages = '';
         }
+
         return $template->getResponse();
     }
 }

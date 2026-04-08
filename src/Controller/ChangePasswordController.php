@@ -80,7 +80,7 @@ class ChangePasswordController extends AbstractLostPasswordController
                     domain: 'contao_default'
                 );
                 $template->fields = [];
-                return $this->createTemplateResponse($template);
+                return $this->createTemplateResponse($template, $request);
             }
         }
 
@@ -98,7 +98,7 @@ class ChangePasswordController extends AbstractLostPasswordController
         $template->fields = $fields;
 
         if (!$submitted) {
-            return $this->createTemplateResponse($template);
+            return $this->createTemplateResponse($template, $request);
         }
 
         $doNotSubmit = false;
@@ -134,7 +134,7 @@ class ChangePasswordController extends AbstractLostPasswordController
         }
 
         $template->hasError = $doNotSubmit;
-        return $this->createTemplateResponse($template);
+        return $this->createTemplateResponse($template, $request);
 
 
         $password = $request->request->get('password');
@@ -256,3 +256,4 @@ class ChangePasswordController extends AbstractLostPasswordController
         return $userModel;
     }
 }
+

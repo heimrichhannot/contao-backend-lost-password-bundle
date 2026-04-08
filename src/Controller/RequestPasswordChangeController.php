@@ -74,7 +74,7 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
         $username = Input::post('username');
 
         if ('tl_request_password' !== Input::post('FORM_SUBMIT') || !$username) {
-            return $this->createTemplateResponse($template);
+            return $this->createTemplateResponse($template, $request);
         }
 
         $userAdapter = $this->framework->getAdapter(UserModel::class);
@@ -82,7 +82,7 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
         $user ??= $userAdapter->findOneBy(['LOWER(tl_user.username)=?'], [strtolower($username)]);
 
         if (null === $user || !$user->email) {
-            return $this->createTemplateResponse($template);
+            return $this->createTemplateResponse($template, $request);
         }
 
 //        $limiter = $this->rateLimiterFactory->create($user->id);
@@ -95,7 +95,7 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
             $this->sendResetEmail($request, $user);
         } catch (\Exception $e) {
             Message::addError($e->getMessage());
-            return $this->createTemplateResponse($template);
+            return $this->createTemplateResponse($template, $request);
         }
 
         $template->setName('backend/lost_password/message_sent');
@@ -112,7 +112,7 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
             ContaoContext::ACCESS,
         );
 
-        return $this->createTemplateResponse($template);
+        return $this->createTemplateResponse($template, $request);
     }
 
     private function sendResetEmail(Request $request, UserModel $user): void
