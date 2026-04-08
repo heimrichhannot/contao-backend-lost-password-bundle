@@ -79,6 +79,7 @@ class ChangePasswordController extends AbstractLostPasswordController
                     'MSC.backendLostPassword.resetErrorExplanation',
                     domain: 'contao_default'
                 );
+                $template->fields = [];
                 return $this->createTemplateResponse($template);
             }
         }
@@ -133,8 +134,6 @@ class ChangePasswordController extends AbstractLostPasswordController
         }
 
         $template->hasError = $doNotSubmit;
-        $template->messages = Message::generate();
-
         return $this->createTemplateResponse($template);
 
 

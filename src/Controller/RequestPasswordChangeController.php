@@ -95,7 +95,6 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
             $this->sendResetEmail($request, $user);
         } catch (\Exception $e) {
             Message::addError($e->getMessage());
-            $template->messages = Message::generate();
             return $this->createTemplateResponse($template);
         }
 

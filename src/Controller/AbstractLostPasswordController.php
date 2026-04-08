@@ -55,9 +55,9 @@ abstract class AbstractLostPasswordController extends AbstractController
     protected function createTemplateResponse(BackendTemplate $template): Response
     {
         if (Message::hasMessages()) {
-            $template->messages = 'HAS'.Message::generate();
+            $template->messages = Message::generate();
         } else {
-            $template->messages = 'NO';
+            $template->messages = '';
         }
         return $template->getResponse();
     }
