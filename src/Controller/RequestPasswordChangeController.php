@@ -40,7 +40,7 @@ use Twig\Markup;
     ],
     methods: ['GET', 'POST']
 )]
-class RequestPasswordChangeController extends AbstractController
+class RequestPasswordChangeController extends AbstractLostPasswordController
 {
     public const NAME = 'contao_backend_request_password_change';
 
@@ -50,7 +50,6 @@ class RequestPasswordChangeController extends AbstractController
         private readonly ContaoFramework        $framework,
         private readonly RouterInterface        $router,
         private readonly Utils                  $utils,
-        private readonly ContaoCsrfTokenManager $csrfTokenManager,
         private readonly UriSigner              $uriSigner,
         private readonly MailerInterface        $mailer,
         private readonly ?NotificationCenter    $notificationCenter,
@@ -68,38 +67,11 @@ class RequestPasswordChangeController extends AbstractController
 
         $this->framework->initialize();
 
-        $template = $this->createLegacyTemplate();
-
-        return $this->handleRequest($template, $request);
-    }
-
-    private function createLegacyTemplate(): BackendTemplate
-    {
-        $system = $this->framework->getAdapter(System::class);
-        $system->loadLanguageFile('default');
-        $system->loadLanguageFile('modules');
-        $system->loadLanguageFile('tl_user');
-
-        /** @var BackendTemplate|object $template */
-        $template = new BackendTemplate('backend/lost_password/request');
-
-        $template->theme = Backend::getTheme();
-        $template->messages = Message::generate();
-        $template->base = Environment::get('base');
-        $template->language = $GLOBALS['TL_LANGUAGE'] ?? 'en';
-        $template->title = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pw_new'] ?? '');
-        $template->charset = Config::get('characterSet') ?? 'utf-8';
-        $template->action = StringUtil::ampersand(Environment::get('request'));
+        $template = $this->createLegacyTemplate('backend/lost_password/request');
         $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['request'] ?? '';
         $template->explain = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestExplanationEmail'] ?? '';
-        $template->submitButton = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue'] ?? 'continue');
-        $template->username = $GLOBALS['TL_LANG']['tl_user']['email'][0] . '/' . $GLOBALS['TL_LANG']['tl_user']['username'][0];
-        $template->requestToken = $this->csrfTokenManager->getDefaultTokenValue();
-        $template->toLogin = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['toLogin'] ?? '';
-        $template->host = Backend::getDecodedHostname();
-        $template->jsDisabled = $GLOBALS['TL_LANG']['MSC']['jsDisabled'];
 
-        return $template;
+        return $this->handleRequest($template, $request);
     }
 
     private function handleRequest(BackendTemplate $template, Request $request): Response

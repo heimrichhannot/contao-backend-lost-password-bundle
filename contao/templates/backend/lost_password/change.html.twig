@@ -1,0 +1,38 @@
+{% extends '@Contao/be_login' %}
+
+{% block head %}
+    {{ parent() }}
+    {% include '@Contao/backend/lost_password/_styles.html.twig' %}
+{% endblock %}
+
+{% block container %}
+    <div id="container">
+        <main id="main">
+            {% block content %}
+                <form class="tl_login_form" method="post">
+                    <div class="formbody">
+                        <input type="hidden" name="FORM_SUBMIT" value="tl_reset_password">
+                        <input type="hidden" name="REQUEST_TOKEN" value="{{ requestToken }}">
+                        <h1>{{ headline }}</h1>
+                        <p>{{ explain }}</p>
+
+                        {% for field in fields %}
+                            <div class="widget">
+                                <label for="{{ field.id }}">{{ field.label }}</label>
+                                <input type="password" name="{{ field.name }}" id="{{ field.id }}" class="tl_text" value="" placeholder="{{ field.label }}" required>
+                            </div>
+                        {% endfor %}
+                        <div class="submit_container cf">
+                            <button type="submit" name="login" id="login" class="tl_submit">{{ submitButton }}</button>
+                        </div>
+                    </div>
+                </form>
+            {% endblock %}
+        </main>
+        {{ messages|raw }}
+        <div class="huh_blp_links_container">
+            {% block links %}
+            {% endblock %}
+        </div>
+    </div>
+{% endblock %}

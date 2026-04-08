@@ -40,12 +40,11 @@ use Symfony\Contracts\Translation\TranslatorInterface;
         '_scope' => 'backend',
     ]
 )]
-class ChangePasswordController extends AbstractController
+class ChangePasswordController extends AbstractLostPasswordController
 {
     public const NAME = 'contao_backend_change_password';
 
     public function __construct(
-        private readonly ContaoCsrfTokenManager $csrfTokenManager,
         private readonly ContaoFramework        $framework,
         private readonly OptIn                  $optIn,
         private readonly TranslatorInterface    $translator,
@@ -59,23 +58,10 @@ class ChangePasswordController extends AbstractController
         $system->loadLanguageFile('default');
         $system->loadLanguageFile('modules');
 
-        /** @var BackendTemplate|object $template */
-        $template = new BackendTemplate('be_lost_password_change');
-
-        $template->theme = Backend::getTheme();
-        $template->messages = Message::generate();
-        $template->base = Environment::get('base');
-        $template->language = $GLOBALS['TL_LANGUAGE'];
-        $template->title = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pw_new'] ?? '');
-        $template->charset = Config::get('characterSet');
-        $template->action = StringUtil::ampersand(Environment::get('request'));
+        $template = $this->createLegacyTemplate('backend/lost_password/change');
         $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['reset'] ?? null;
         $template->explain = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetExplanation'] ?? null;
         $template->submitButton = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue'] ?? '');
-//        $template->password = $GLOBALS['TL_LANG']['MSC']['password'][0] ?? null;
-//        $template->confirm = $GLOBALS['TL_LANG']['MSC']['confirm'][0] ?? null;
-        $template->requestToken = $this->csrfTokenManager->getDefaultTokenValue();
-
 
         $strFormId = 'tl_reset_password';
         $submitted = $strFormId === $request->request->get('FORM_SUBMIT');
@@ -103,17 +89,18 @@ class ChangePasswordController extends AbstractController
                 'name' => 'password',
                 'eval' => [
                     'mandatory' => true,
-                    'minlength'=>Config::get('minPasswordLength'),
+                    'minlength' => Config::get('minPasswordLength'),
                     'tl_class' => 'tl_text',
-                ]
+                ],
+                'class' => 'tl_text',
             ],
-            'confirm' => [
+            'password_confirm' => [
                 'label' => &$GLOBALS['TL_LANG']['MSC']['confirm'],
                 'inputType' => 'password',
-                'name' => 'confirm',
+                'name' => 'password_confirm',
                 'eval' => [
                     'mandatory' => true,
-                    'minlength'=>Config::get('minPasswordLength'),
+                    'minlength' => Config::get('minPasswordLength'),
                     'tl_class' => 'tl_text',
                 ]
             ],
@@ -149,10 +136,10 @@ class ChangePasswordController extends AbstractController
                 }
             }
 
-            $strFields .= $objWidget->parse();
+            $widgets[] = $objWidget;
         }
 
-        $template->fields = $strFields;
+        $template->fields = $widgets;
         $template->hasError = $doNotSubmit;
 
         return $template->getResponse();

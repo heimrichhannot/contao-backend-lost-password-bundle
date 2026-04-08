@@ -2,15 +2,7 @@
 
 {% block head %}
     {{ parent() }}
-    {% block styles %}
-        <style>
-            .huh_blp_links_container {
-                display: flex;
-                justify-content: center;
-                margin-top: 1rem;
-            }
-        </style>
-    {% endblock %}
+    {% include '@Contao/backend/lost_password/_styles.html.twig' %}
 {% endblock %}
 
 {% block container %}
