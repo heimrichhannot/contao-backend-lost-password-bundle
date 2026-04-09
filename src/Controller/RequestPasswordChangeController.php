@@ -81,6 +81,7 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
 
         if (!$limiter->consume()->isAccepted()) {
             Message::addError($this->translator->trans('MSC.tooManyPasswordResetAttempts', domain: 'contao_default'));
+
             return $this->createTemplateResponse($template, $request);
         }
 
@@ -93,6 +94,7 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
 
         if (null === $user || !$user->email) {
             $this->buildSuccessTemplate($template);
+
             return $this->createTemplateResponse($template, $request);
         }
 
@@ -197,10 +199,6 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
         return true;
     }
 
-    /**
-     * @param BackendTemplate $template
-     * @return void
-     */
     public function buildSuccessTemplate(BackendTemplate $template): void
     {
         $template->setName('backend/lost_password/message_sent');

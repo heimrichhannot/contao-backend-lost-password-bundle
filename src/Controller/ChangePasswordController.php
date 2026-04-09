@@ -14,7 +14,6 @@ use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\OptIn\OptIn;
 use Contao\CoreBundle\OptIn\OptInTokenInterface;
 use Contao\DC_Table;
-use Contao\FormPassword;
 use Contao\Message;
 use Contao\Password;
 use Contao\StringUtil;
@@ -22,7 +21,6 @@ use Contao\System;
 use Contao\UserModel;
 use Contao\Versions;
 use HeimrichHannot\UtilsBundle\Util\Utils;
-use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
@@ -110,9 +108,10 @@ class ChangePasswordController extends AbstractLostPasswordController
         $passwordHasher = $this->passwordHasherFactory->getPasswordHasher(BackendUser::class);
 
         try {
-            $this->validatePassword($newPassword, $request, $fields, $user, $passwordHasher,);
+            $this->validatePassword($newPassword, $request, $fields, $user, $passwordHasher);
         } catch (\Exception $e) {
             Message::addError($e->getMessage());
+
             return $this->createTemplateResponse($template, $request);
         }
 
@@ -162,8 +161,7 @@ class ChangePasswordController extends AbstractLostPasswordController
         array $fields,
         UserModel $user,
         PasswordHasherInterface $passwordHasher,
-    ): void
-    {
+    ): void {
         if ($newPassword !== $request->request->get('password_confirm')) {
             throw new \Exception($this->translator->trans('ERR.passwordMatch', domain: 'contao_default'));
         }
@@ -187,13 +185,11 @@ class ChangePasswordController extends AbstractLostPasswordController
             throw new \Exception($errors);
         }
 
-        if ($newPassword == $user->username)
-        {
+        if ($newPassword == $user->username) {
             throw new \Exception($this->translator->trans('ERR.passwordName', domain: 'contao_default'));
         }
 
-        if ($passwordHasher->verify($user->password, $newPassword))
-        {
+        if ($passwordHasher->verify($user->password, $newPassword)) {
             throw new \Exception($this->translator->trans('MSC.pw_change', domain: 'contao_default'));
         }
     }
