@@ -9,6 +9,7 @@ use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 
 class HeimrichHannotBackendLostPasswordExtension extends Extension
 {
+    #[\Override]
     public function getAlias(): string
     {
         return 'huh_backend_lost_password';

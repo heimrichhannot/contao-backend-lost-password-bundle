@@ -7,34 +7,22 @@
 
 namespace HeimrichHannot\BackendLostPasswordBundle\Controller;
 
-use Contao\Backend;
-use Contao\BackendTemplate;
+use Symfony\Component\Routing\Attribute\Route;
 use Contao\Config;
 use Contao\Controller;
-use Contao\CoreBundle\Controller\AbstractController;
-use Contao\CoreBundle\Csrf\ContaoCsrfTokenManager;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\OptIn\OptIn;
-use Contao\CoreBundle\OptIn\OptInToken;
 use Contao\CoreBundle\OptIn\OptInTokenInterface;
 use Contao\DC_Table;
-use Contao\Email;
-use Contao\Environment;
 use Contao\FormPassword;
-use Contao\Idna;
-use Contao\Input;
 use Contao\Message;
-use Contao\OptInModel;
 use Contao\StringUtil;
 use Contao\System;
 use Contao\UserModel;
 use Contao\Versions;
-use Contao\Widget;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route(
@@ -146,7 +134,7 @@ class ChangePasswordController extends AbstractLostPasswordController
         // Initialize the versioning (see #8301)
         $objVersions = new Versions('tl_user', $user->id);
         $objVersions->setUsername($user->username);
-        $objVersions->setEditUrl($this->generateUrl('contao_backend', array('do' => 'user', 'act' => 'edit', 'id' => $user->id)));
+        $objVersions->setEditUrl($this->generateUrl('contao_backend', ['do' => 'user', 'act' => 'edit', 'id' => $user->id]));
         $objVersions->initialize();
 
         $dc = $this->createDataContainerObject($user);

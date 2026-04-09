@@ -117,7 +117,7 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
 
     private function sendResetEmail(Request $request, UserModel $user): void
     {
-        $optInToken = $this->optIn->create(self::TOKEN_PREFIX, $user->email, array('tl_user' => array($user->id)));
+        $optInToken = $this->optIn->create(self::TOKEN_PREFIX, $user->email, ['tl_user' => [$user->id]]);
 
         $resetUrl = $this->router->generate(
             name: ChangePasswordController::NAME,
