@@ -32,6 +32,7 @@ abstract class AbstractLostPasswordController extends AbstractController
         $template->title = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pw_new'] ?? '');
         $template->charset = Config::get('characterSet') ?? 'utf-8';
         $template->action = StringUtil::ampersand(Environment::get('request'));
+        $template->formId = 'tl_lost_password';
 
         $version = InstalledVersions::getPrettyVersion('contao/core-bundle') ?? '';
 

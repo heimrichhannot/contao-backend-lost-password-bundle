@@ -24,9 +24,11 @@ use Contao\FormPassword;
 use Contao\Idna;
 use Contao\Input;
 use Contao\Message;
+use Contao\OptInModel;
 use Contao\StringUtil;
 use Contao\System;
 use Contao\UserModel;
+use Contao\Versions;
 use Contao\Widget;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use Symfony\Component\HttpFoundation\Request;
@@ -50,6 +52,7 @@ class ChangePasswordController extends AbstractLostPasswordController
         private readonly ContaoFramework        $framework,
         private readonly OptIn                  $optIn,
         private readonly TranslatorInterface    $translator,
+        private readonly Utils                $utils,
     ) {}
 
     public function __invoke(Request $request): Response
@@ -59,6 +62,7 @@ class ChangePasswordController extends AbstractLostPasswordController
         $system = $this->framework->getAdapter(System::class);
         $system->loadLanguageFile('default');
         $system->loadLanguageFile('modules');
+        Controller::loadDataContainer('tl_user');
 
         $template = $this->createLegacyTemplate('backend/lost_password/change');
         $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['reset'] ?? null;
@@ -71,7 +75,7 @@ class ChangePasswordController extends AbstractLostPasswordController
         } catch (\Exception $e) {
             Message::addError($e->getMessage());
 
-            $template->errorMessage = $this->translator->trans(
+            $template->explain = $this->translator->trans(
                 'MSC.backendLostPassword.resetErrorExplanation',
                 domain: 'contao_default'
             );
@@ -139,11 +143,32 @@ class ChangePasswordController extends AbstractLostPasswordController
             return $this->redirect($request->getUri());
         }
 
-//        $token->confirm();
+        // Initialize the versioning (see #8301)
+        $objVersions = new Versions('tl_user', $user->id);
+        $objVersions->setUsername($user->username);
+        $objVersions->setEditUrl($this->generateUrl('contao_backend', array('do' => 'user', 'act' => 'edit', 'id' => $user->id)));
+        $objVersions->initialize();
+
+        $dc = $this->createDataContainerObject($user);
+        $pw = $passwordField->value;
+
+        $this->utils->dca()->executeCallback(
+            $GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'] ?? null,
+            $pw,
+            $dc
+        );
 
         $user->pwChange = false;
-        $user->password = $passwordField->value;
+        $user->password = $pw;
         $user->save();
+
+        $token->confirm();
+
+        // Create a new version
+        if ($GLOBALS['TL_DCA']['tl_user']['config']['enableVersioning'] ?? null)
+        {
+            $objVersions->create();
+        }
 
         Message::addConfirmation(
             $GLOBALS['TL_LANG']['MSC']['pw_changed']
@@ -272,6 +297,36 @@ class ChangePasswordController extends AbstractLostPasswordController
 //        $token->confirm();
 
         return $userModel;
+    }
+
+    public function createDataContainerObject(UserModel $user): DC_Table
+    {
+        return new class ($user) extends DC_Table {
+            public function __construct(private readonly UserModel $user)
+            {
+                $this->intId = $user->id;
+                $this->strTable = $user::getTable();
+                $this->objActiveRecord = $this->user;
+            }
+
+            public function getCurrentRecord(int|string|null $id = null, ?string $table = null): array|null
+            {
+                if (is_string($table) && $this->user::getTable() !== $table) {
+                    return null;
+                }
+
+                if (null !== $id && (int)$id !== $this->user->id) {
+                    return null;
+                }
+
+                return $this->user->row();
+            }
+
+            protected function row()
+            {
+                return $this->user->row();
+            }
+        };
     }
 }
 

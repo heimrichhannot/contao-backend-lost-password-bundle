@@ -16,15 +16,20 @@
                         <h1>{{ headline }}</h1>
                         <p>{{ explain }}</p>
 
-                        {% for field in fields %}
-                            <div class="widget">
-                                <label for="{{ field.id }}">{{ field.label }}</label>
-                                <input type="password" name="{{ field.name }}" id="{{ field.id }}" class="tl_text" value="" placeholder="{{ field.label }}" required>
+                        {% if fields|default is not empty %}
+
+                            {% for field in fields %}
+                                <div class="widget">
+                                    <label for="{{ field.id }}">{{ field.label }}</label>
+                                    <input type="password" name="{{ field.name }}" id="{{ field.id }}" class="tl_text"
+                                           value="" placeholder="{{ field.label }}" required>
+                                </div>
+                            {% endfor %}
+                            <div class="submit_container cf">
+                                <button type="submit" name="login" id="login"
+                                        class="tl_submit">{{ submitButton }}</button>
                             </div>
-                        {% endfor %}
-                        <div class="submit_container cf">
-                            <button type="submit" name="login" id="login" class="tl_submit">{{ submitButton }}</button>
-                        </div>
+                        {% endif %}
                     </div>
                 </form>
             {% endblock %}
