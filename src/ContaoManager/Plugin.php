@@ -42,7 +42,7 @@ class Plugin implements BundlePluginInterface, RoutingPluginInterface, Extension
         $firewalls = &$extensionConfigs[0]['firewalls'];
 
         ArrayUtil::arrayInsert($firewalls, 0, [
-            'request_passwort_form' => [
+            'request_password_form' => [
                 'request_matcher' => ResetPasswordMatcher::class,
                 'security' => false,
             ],

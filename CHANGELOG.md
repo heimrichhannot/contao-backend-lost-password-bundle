@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2026-04-09
+This is a major rewrite of this extension.
+- Changed: dropped support contao 4
+- Changed: require at least php 8.3
+- Changed: support notification center 2
+- Changed: select notification center notification for password reset in settings (BREAKING)
+- Changed: refactored template to twig and new contao template system (BREAKING)
+- Fixed: do not allow disabled user to request password reset
+
 ## [1.8.0] - 2025-09-29
 - Changed: dropped support for symfony 3 and 4
 - Changed: added basic CI chain

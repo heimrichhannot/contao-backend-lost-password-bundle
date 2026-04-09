@@ -1,9 +1,4 @@
-{% extends '@Contao/be_login' %}
-
-{% block head %}
-    {{ parent() }}
-    {% include '@Contao/backend/lost_password/_styles.html.twig' %}
-{% endblock %}
+{% extends '@Contao/backend/lost_password/_wrapper.html.twig' %}
 
 {% block container %}
     <div id="container">
@@ -35,9 +30,6 @@
             {% endblock %}
         </main>
         {{ messages|raw }}
-        <div class="huh_blp_links_container">
-            {% block links %}
-            {% endblock %}
-        </div>
+        {% include '@Contao/backend/lost_password/_links.html.twig' %}
     </div>
 {% endblock %}

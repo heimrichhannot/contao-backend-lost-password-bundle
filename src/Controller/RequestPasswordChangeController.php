@@ -72,17 +72,28 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
         }
 
         $userAdapter = $this->framework->getAdapter(UserModel::class);
-        $user = $userAdapter->findOneBy(['LOWER(tl_user.email)=?'], [strtolower($username)]);
-        $user ??= $userAdapter->findOneBy(['LOWER(tl_user.username)=?'], [strtolower($username)]);
+        $username = strtolower($username);
+        /** @var UserModel|null $user */
+        $user = $userAdapter->findOneBy(['LOWER(tl_user.email)=?'], [$username]);
+        $user ??= $userAdapter->findOneBy(['LOWER(tl_user.username)=?'], [$username]);
 
-        if (null === $user || !$user->email) {
+        $limiter = $this->rateLimiterFactory->create($user?->id ?: $username);
+
+        if (!$limiter->consume()->isAccepted()) {
+            Message::addError($this->translator->trans('MSC.tooManyPasswordResetAttempts', domain: 'contao_default'));
             return $this->createTemplateResponse($template, $request);
         }
 
-        $limiter = $this->rateLimiterFactory->create($user->id);
+        if (null !== $user) {
+            $time = time();
+            if ($user->disable || ($user->start && $user->start > $time) || ($user->stop && $user->stop <= $time)) {
+                $user = null;
+            }
+        }
 
-        if (!$limiter->consume()->isAccepted()) {
-            throw new \RuntimeException($this->translator->trans('MSC.tooManyPasswordResetAttempts', domain: 'contao_default'));
+        if (null === $user || !$user->email) {
+            $this->buildSuccessTemplate($template);
+            return $this->createTemplateResponse($template, $request);
         }
 
         try {
@@ -93,13 +104,7 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
             return $this->createTemplateResponse($template, $request);
         }
 
-        $template->setName('backend/lost_password/message_sent');
-        $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['thankYou'] ?? '';
-        $template->successMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestLinkSentEmail'] ?? 'Success';
-        $template->spamNote = new Markup(
-            $this->translator->trans('MSC.backendLostPassword.spamNote', domain: 'contao_default'),
-            'UTF-8'
-        );
+        $this->buildSuccessTemplate($template);
 
         $this->utils->container()->log(
             "A new password has been requested for backend user ID {$user->id} ({$user->email})",
@@ -190,5 +195,20 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
         $this->notificationCenter->sendNotification($notification, $tokens);
 
         return true;
+    }
+
+    /**
+     * @param BackendTemplate $template
+     * @return void
+     */
+    public function buildSuccessTemplate(BackendTemplate $template): void
+    {
+        $template->setName('backend/lost_password/message_sent');
+        $template->headline = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['thankYou'] ?? '';
+        $template->successMessage = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['requestLinkSentEmail'] ?? 'Success';
+        $template->spamNote = new Markup(
+            $this->translator->trans('MSC.backendLostPassword.spamNote', domain: 'contao_default'),
+            'UTF-8'
+        );
     }
 }

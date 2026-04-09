@@ -107,7 +107,6 @@ class ChangePasswordController extends AbstractLostPasswordController
         }
 
         $doNotSubmit = false;
-        // Initialize the widgets
         foreach ($fields as $objWidget) {
             // Validate the widget
             if ($submitted) {
@@ -117,12 +116,10 @@ class ChangePasswordController extends AbstractLostPasswordController
                     $doNotSubmit = true;
                 }
             }
-
-            $widgets[] = $objWidget;
         }
 
         if ($doNotSubmit) {
-            foreach ($widgets as $widget) {
+            foreach ($fields as $widget) {
                 if ($widget->hasErrors()) {
                     Message::addError($widget->getErrorAsString());
                 }
@@ -142,16 +139,15 @@ class ChangePasswordController extends AbstractLostPasswordController
         $objVersions->initialize();
 
         $dc = $this->createDataContainerObject($user);
-        $pw = $passwordField->value;
 
         $this->utils->dca()->executeCallback(
             $GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'] ?? null,
-            $pw,
+            $passwordField->value,
             $dc
         );
 
         $user->pwChange = false;
-        $user->password = $pw;
+        $user->password = $passwordField->value;
         $user->save();
 
         $token->confirm();

@@ -24,22 +24,9 @@ composer require heimrichhannot/contao-backend-lost-password-bundle
 
 You can use [Notification Center](https://github.com/terminal42/contao-notification_center) to send the password request.
 
-> [!IMPORTANT]
-> Only notification center v1 is currently integrated.
-> Working on support for notification center v2.
-
-> [!WARNING]
-> This will be changed before the first stable v2 release.
-
 1. Create a notification of type `User: Lost password` with `##recipient_email##` as recipient and content that contains `##link##` (the link to the password reset page).
     You can use additional token: `##domain##` and user data withing `##user_*##`.
-2. Set the id of the notification in your project configuration in `huh_backend_lost_password.nc_notification`.
-
-```yaml
-# config/config.yml
-huh_backend_lost_password:
-    nc_notification: 5
-```
+2. Select the notification in settings.
 
 ### Adjust the email's text
 
