@@ -5,6 +5,7 @@ namespace HeimrichHannot\BackendLostPasswordBundle\EventListener;
 use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsHook;
 use Contao\CoreBundle\Event\MenuEvent;
+use Contao\Message;
 use Contao\Template;
 use HeimrichHannot\BackendLostPasswordBundle\Controller\RequestPasswordChangeController;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
@@ -19,7 +20,6 @@ readonly class AddLostPasswordLinkListener
         private TranslatorInterface $translator,
         private Environment         $twig,
         private array               $bundleConfig,
-        private UriSigner           $uriSigner,
         private RouterInterface     $router,
     ) {}
 
@@ -67,8 +67,10 @@ readonly class AddLostPasswordLinkListener
             return;
         }
 
+        Message::addInfo('<a href="'.$this->requestPasswordUrl().'">'.$this->translator->trans('huh.backend_lost_password.misc.lost_password').'</a>');
+
         $messages = $this->twig->render(
-            name: '@Contao/backend/lost_password_link.html.twig',
+            name: '@Contao/backend/lost_password/link.html.twig',
             context: [
                 'url' => $this->requestPasswordUrl(),
             ],
@@ -80,12 +82,6 @@ readonly class AddLostPasswordLinkListener
 
     private function requestPasswordUrl(): string
     {
-        $url = $this->router->generate(RequestPasswordChangeController::NAME, referenceType: RouterInterface::ABSOLUTE_URL);
-        /**
-         * Time parameter is added in symfony 7.1, make link only valid one hour
-         *
-         * @noinspection PhpMethodParametersCountMismatchInspection
-         */
-        return $this->uriSigner->sign($url, new \DateTimeImmutable('+1 hour'));
+        return $this->router->generate(RequestPasswordChangeController::NAME, referenceType: RouterInterface::ABSOLUTE_URL);
     }
 }

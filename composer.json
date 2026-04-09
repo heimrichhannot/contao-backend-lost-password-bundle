@@ -30,6 +30,7 @@
         "symplify/easy-coding-standard": "^12.6",
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-symfony": "^2.0",
-        "contao/manager-plugin": "^2.13"
+        "contao/manager-plugin": "^2.13",
+        "terminal42/notification_center": "^2.6"
     }
 }

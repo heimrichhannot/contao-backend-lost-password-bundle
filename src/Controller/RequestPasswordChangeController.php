@@ -4,7 +4,6 @@ namespace HeimrichHannot\BackendLostPasswordBundle\Controller;
 
 use Contao\BackendTemplate;
 use Contao\Config;
-use Contao\CoreBundle\Exception\AccessDeniedException;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\CoreBundle\OptIn\OptIn;
@@ -16,7 +15,6 @@ use Contao\UserModel;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\UriSigner;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
@@ -45,7 +43,6 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
         private readonly ContaoFramework        $framework,
         private readonly RouterInterface        $router,
         private readonly Utils                  $utils,
-        private readonly UriSigner              $uriSigner,
         private readonly MailerInterface        $mailer,
         private readonly ?NotificationCenter    $notificationCenter,
         private readonly RateLimiterFactory     $rateLimiterFactory,
@@ -56,10 +53,6 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
 
     public function __invoke(Request $request): Response
     {
-        if (!$this->uriSigner->checkRequest($request)) {
-            throw new AccessDeniedException();
-        }
-
         $this->framework->initialize();
 
         $template = $this->createLegacyTemplate('backend/lost_password/request');

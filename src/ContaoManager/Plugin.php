@@ -49,31 +49,5 @@ class Plugin implements BundlePluginInterface, RoutingPluginInterface, Extension
         ]);
 
         return $extensionConfigs;
-
-
-        $newFirewall = [
-            'lost-password' => [
-                'pattern' => '^/contao-be-lost-password',
-                'security' => false,
-            ],
-        ];
-
-        $keys = \array_keys($firewalls);
-        $position = \array_search('install', $keys, true);
-
-        if ($position === false)
-        {
-            $firewalls += $newFirewall;
-
-            return $extensionConfigs;
-        }
-
-        $firewalls = \array_merge(
-            \array_slice($firewalls, 0, $position, true),
-            $newFirewall,
-            \array_slice($firewalls, $position, null, true)
-        );
-
-        return $extensionConfigs;
     }
 }
