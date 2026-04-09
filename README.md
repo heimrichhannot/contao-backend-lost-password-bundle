@@ -8,19 +8,41 @@ This bundle offers a lost password function for the backend of the Contao CMS.
 
 - Never send new passwords to your customers again if they have forgotten their old ones. :-)
 - After requesting a new password, a password reset link is sent to the user's email.
-- Select a mailer transport for outgoing mails in the settings.
+- Optional notification center support
 
-## Installation
+## Requirements
+- Contao 5.3 or higher
+- PHP 8.3 or higher
 
-Install the bundle via composer:
+## Installation and Setup
 
-```shell
-composer require heimrichhannot/contao-backend-lost-password-bundle
-```
+1. Install the extension via the Contao Manager or composer:
+
+    ```shell
+    composer require heimrichhannot/contao-backend-lost-password-bundle
+    ```
+   
+2. Update your database
+3. Optional: Install notification center if you want to use it for sending the password reset email.
+4. Optional: To use a custom mailer transport with the build in mailer, select it in settings.
+5. Optional: To use Notification Center, create a notification of type `User: Lost password` and select it in settings. See details below.
 
 ## Customize
 
-### Use Notification center
+### Password reset email
+
+You have two options to send the password reset email: You can either use the the build in mail function or use Notification Center.
+
+#### Build in mail function
+
+To adjust the email's text, adjust following labels:
+
+```
+$GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageSubjectResetPassword']
+$GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageBodyResetPassword']
+```
+
+#### Notification center
 
 You can use [Notification Center](https://github.com/terminal42/contao-notification_center) to send the password request.
 
@@ -28,27 +50,12 @@ You can use [Notification Center](https://github.com/terminal42/contao-notificat
     You can use additional token: `##domain##` and user data withing `##user_*##`.
 2. Select the notification in settings.
 
-### Adjust the email's text
-
-**Hint: You can also set a notification center message by setting the id in your config.yml (see below).**
-
-Simply override the following `$GLOBALS` entries:
-
-```
-$GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageSubjectResetPassword']
-$GLOBALS['TL_LANG']['MSC']['backendLostPassword']['messageBodyResetPassword']
-```
-
 ## Configuration reference
 
 ```yaml
 # Default configuration for extension with alias: "huh_backend_lost_password"
 huh_backend_lost_password:
-    # Automatically add the request new password link to the backend login page.
+    # Automatically add the request new password link to the backend login page. Set to false if you want to add the link manually in your template.
     # Default: true 
     add_to_template: true
-
-    # The numeric ID of the notification center notification which is sent for resetting the password.
-    # Deprecated. Will be removed in the first stable v2 release.
-    nc_notification: null
 ```

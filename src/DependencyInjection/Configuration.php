@@ -13,7 +13,7 @@ class Configuration implements ConfigurationInterface
         $treeBuilder->getRootNode()
             ->children()
                 ->booleanNode('add_to_template')
-                    ->info('If true, that backend lost password link will be automatically added to the backed login template. Default false. Will be true in the next major version!')
+                    ->info('If true, that backend lost password link will be automatically added to the backed login template. Set to false if you want to render the link by yourself.')
                     ->defaultTrue()
                 ->end()
             ->end();
