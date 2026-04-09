@@ -85,11 +85,11 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
             return $this->createTemplateResponse($template, $request);
         }
 
-//        $limiter = $this->rateLimiterFactory->create($user->id);
+        $limiter = $this->rateLimiterFactory->create($user->id);
 
-//        if (!$limiter->consume()->isAccepted()) {
-//            throw new \RuntimeException($this->translator->trans('MSC.tooManyPasswordResetAttempts', domain: 'contao_default'));
-//        }
+        if (!$limiter->consume()->isAccepted()) {
+            throw new \RuntimeException($this->translator->trans('MSC.tooManyPasswordResetAttempts', domain: 'contao_default'));
+        }
 
         try {
             $this->sendResetEmail($request, $user);
