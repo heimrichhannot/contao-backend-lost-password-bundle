@@ -5,6 +5,7 @@ namespace HeimrichHannot\BackendLostPasswordBundle\EventListener;
 use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsHook;
 use Contao\CoreBundle\Event\MenuEvent;
+use Contao\CoreBundle\String\HtmlAttributes;
 use Contao\Message;
 use Contao\Template;
 use HeimrichHannot\BackendLostPasswordBundle\Controller\RequestPasswordChangeController;
@@ -18,7 +19,6 @@ readonly class AddLostPasswordLinkListener
 {
     public function __construct(
         private TranslatorInterface $translator,
-        private Environment         $twig,
         private array               $bundleConfig,
         private RouterInterface     $router,
     ) {}
@@ -67,21 +67,24 @@ readonly class AddLostPasswordLinkListener
             return;
         }
 
-        Message::addInfo('<a href="'.$this->requestPasswordUrl().'">'.$this->translator->trans('huh.backend_lost_password.misc.lost_password').'</a>');
+        $attributes = (new HtmlAttributes())
+            ->set('href', $this->requestPasswordUrl())
+            ->addClass('lost-password')
+        ;
 
-        $messages = $this->twig->render(
-            name: '@Contao/backend/lost_password/link.html.twig',
-            context: [
-                'url' => $this->requestPasswordUrl(),
-            ],
+        Message::addInfo(
+            '<a'.$attributes.'>'.$this->translator->trans('huh.backend_lost_password.misc.lost_password').'</a>',
+            'BE_LOST_PASSWORD'
         );
 
-        $messages .= ($template->messages ?? '');
-        $template->messages = $messages;
+        $template->messages = ($template->messages ?? '') . Message::generate('BE_LOST_PASSWORD');
     }
 
     private function requestPasswordUrl(): string
     {
-        return $this->router->generate(RequestPasswordChangeController::NAME, referenceType: RouterInterface::ABSOLUTE_URL);
+        return $this->router->generate(
+            name: RequestPasswordChangeController::NAME,
+            referenceType: RouterInterface::ABSOLUTE_URL
+        );
     }
 }
