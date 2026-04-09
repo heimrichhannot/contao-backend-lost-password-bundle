@@ -12,7 +12,8 @@ readonly class AddAssetsListener
 {
     public function __construct(
         private ScopeMatcher $scopeMatcher
-    ) {}
+    ) {
+    }
 
     public function __invoke(RequestEvent $event): void
     {

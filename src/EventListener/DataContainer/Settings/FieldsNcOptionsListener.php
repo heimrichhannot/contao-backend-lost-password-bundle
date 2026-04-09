@@ -11,13 +11,15 @@ class FieldsNcOptionsListener
 {
     public function __construct(
         private readonly ?NotificationCenter $notificationCenter,
-    ) {}
+    ) {
+    }
 
     public function __invoke(): array
     {
         if (null === $this->notificationCenter) {
             return [];
         }
+
         return $this->notificationCenter->getNotificationsForNotificationType(LostPasswordNotificationType::NAME);
     }
 }

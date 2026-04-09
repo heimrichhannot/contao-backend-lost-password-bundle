@@ -13,7 +13,7 @@ return RectorConfig::configure()
     ->withPaths([
         __DIR__ . '/src',
         __DIR__ . '/contao',
-
+        __DIR__ . '/config',
     ])
     ->withRules([
         AddVoidReturnTypeWhereNoReturnRector::class,

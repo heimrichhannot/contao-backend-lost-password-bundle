@@ -10,7 +10,8 @@ class ConfigOnLoadListener
 {
     public function __construct(
         private readonly ?NotificationCenter $notificationCenter,
-    ) {}
+    ) {
+    }
 
     #[AsCallback(table: 'tl_settings', target: 'config.onload')]
     public function __invoke(?DataContainer $dc = null): void

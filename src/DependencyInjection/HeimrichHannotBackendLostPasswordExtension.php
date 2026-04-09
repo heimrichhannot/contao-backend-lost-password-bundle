@@ -17,15 +17,11 @@ class HeimrichHannotBackendLostPasswordExtension extends Extension
 
     public function load(array $configs, ContainerBuilder $container): void
     {
-        ###> Configuration ###
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
         $container->setParameter($this->getAlias(), $config);
-        ###< Configuration ###
 
-        ###> Services ###
         $loader = new PhpFileLoader($container, new FileLocator(\dirname(__DIR__, 2) . '/config'));
         $loader->load('services.php');
-        ###< Services ###
     }
 }

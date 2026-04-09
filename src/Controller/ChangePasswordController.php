@@ -7,7 +7,6 @@
 
 namespace HeimrichHannot\BackendLostPasswordBundle\Controller;
 
-use Symfony\Component\Routing\Attribute\Route;
 use Contao\Config;
 use Contao\Controller;
 use Contao\CoreBundle\Framework\ContaoFramework;
@@ -23,6 +22,7 @@ use Contao\Versions;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route(
@@ -37,11 +37,12 @@ class ChangePasswordController extends AbstractLostPasswordController
     public const NAME = 'contao_backend_change_password';
 
     public function __construct(
-        private readonly ContaoFramework        $framework,
-        private readonly OptIn                  $optIn,
-        private readonly TranslatorInterface    $translator,
-        private readonly Utils                $utils,
-    ) {}
+        private readonly ContaoFramework $framework,
+        private readonly OptIn $optIn,
+        private readonly TranslatorInterface $translator,
+        private readonly Utils $utils,
+    ) {
+    }
 
     public function __invoke(Request $request): Response
     {
@@ -68,6 +69,7 @@ class ChangePasswordController extends AbstractLostPasswordController
                 domain: 'contao_default'
             );
             $template->fields = [];
+
             return $this->createTemplateResponse($template, $request);
         }
 
@@ -87,7 +89,6 @@ class ChangePasswordController extends AbstractLostPasswordController
             'name' => 'password_confirm',
         ]);
 
-
         $fields = [$passwordField, $confirmField];
         $template->fields = $fields;
 
@@ -101,20 +102,18 @@ class ChangePasswordController extends AbstractLostPasswordController
 
         if ($request->request->get('password') !== $request->request->get('password_confirm')) {
             Message::addError($GLOBALS['TL_LANG']['ERR']['passwordMatch'] ?? 'Passwords don\'t match.');
+
             return $this->redirect($request->getUri());
         }
 
         $doNotSubmit = false;
         // Initialize the widgets
-        foreach ($fields as $objWidget)
-        {
+        foreach ($fields as $objWidget) {
             // Validate the widget
-            if ($submitted)
-            {
+            if ($submitted) {
                 $objWidget->validate();
 
-                if ($objWidget->hasErrors())
-                {
+                if ($objWidget->hasErrors()) {
                     $doNotSubmit = true;
                 }
             }
@@ -128,13 +127,18 @@ class ChangePasswordController extends AbstractLostPasswordController
                     Message::addError($widget->getErrorAsString());
                 }
             }
+
             return $this->redirect($request->getUri());
         }
 
         // Initialize the versioning (see #8301)
         $objVersions = new Versions('tl_user', $user->id);
         $objVersions->setUsername($user->username);
-        $objVersions->setEditUrl($this->generateUrl('contao_backend', ['do' => 'user', 'act' => 'edit', 'id' => $user->id]));
+        $objVersions->setEditUrl($this->generateUrl('contao_backend', [
+            'do' => 'user',
+            'act' => 'edit',
+            'id' => $user->id
+        ]));
         $objVersions->initialize();
 
         $dc = $this->createDataContainerObject($user);
@@ -153,8 +157,7 @@ class ChangePasswordController extends AbstractLostPasswordController
         $token->confirm();
 
         // Create a new version
-        if ($GLOBALS['TL_DCA']['tl_user']['config']['enableVersioning'] ?? null)
-        {
+        if ($GLOBALS['TL_DCA']['tl_user']['config']['enableVersioning'] ?? null) {
             $objVersions->create();
         }
 
@@ -205,7 +208,7 @@ class ChangePasswordController extends AbstractLostPasswordController
     {
         $arrRelated = $token->getRelatedRecords();
 
-        if (\count($arrRelated) != 1 || key($arrRelated) != 'tl_user' || \count($arrIds = current($arrRelated)) != 1 || (!$userModel = UserModel::findById($arrIds[0]))) {
+        if (1 != \count($arrRelated) || 'tl_user' != key($arrRelated) || 1 != \count($arrIds = current($arrRelated)) || (!$userModel = UserModel::findById($arrIds[0]))) {
             throw new \Exception($this->translator->trans('MSC.invalidToken', domain: 'contao_default'));
         }
 
@@ -217,28 +220,27 @@ class ChangePasswordController extends AbstractLostPasswordController
             throw new \Exception($this->translator->trans('MSC.tokenEmailMismatch', domain: 'contao_default'));
         }
 
-//        $token->confirm();
-
         return $userModel;
     }
 
     public function createDataContainerObject(UserModel $user): DC_Table
     {
-        return new class ($user) extends DC_Table {
-            public function __construct(private readonly UserModel $user)
-            {
+        return new class($user) extends DC_Table {
+            public function __construct(
+                private readonly UserModel $user
+            ) {
                 $this->intId = $user->id;
                 $this->strTable = $user::getTable();
                 $this->objActiveRecord = $this->user;
             }
 
-            public function getCurrentRecord(int|string|null $id = null, ?string $table = null): array|null
+            public function getCurrentRecord(int|string|null $id = null, ?string $table = null): ?array
             {
                 if (is_string($table) && $this->user::getTable() !== $table) {
                     return null;
                 }
 
-                if (null !== $id && (int)$id !== $this->user->id) {
+                if (null !== $id && (int) $id !== $this->user->id) {
                     return null;
                 }
 
@@ -252,4 +254,3 @@ class ChangePasswordController extends AbstractLostPasswordController
         };
     }
 }
-

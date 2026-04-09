@@ -9,7 +9,6 @@ use Symfony\Component\HttpFoundation\RequestMatcherInterface;
 
 class ResetPasswordMatcher implements RequestMatcherInterface
 {
-
     public function matches(Request $request): bool
     {
         return in_array(

@@ -40,16 +40,17 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
     public const TOKEN_PREFIX = 'rpw';
 
     public function __construct(
-        private readonly ContaoFramework        $framework,
-        private readonly RouterInterface        $router,
-        private readonly Utils                  $utils,
-        private readonly MailerInterface        $mailer,
-        private readonly ?NotificationCenter    $notificationCenter,
-        private readonly RateLimiterFactory     $rateLimiterFactory,
-        private readonly TranslatorInterface    $translator,
-        private readonly OptIn                  $optIn,
-        private readonly SimpleTokenParser      $tokenParser,
-    ) {}
+        private readonly ContaoFramework $framework,
+        private readonly RouterInterface $router,
+        private readonly Utils $utils,
+        private readonly MailerInterface $mailer,
+        private readonly ?NotificationCenter $notificationCenter,
+        private readonly RateLimiterFactory $rateLimiterFactory,
+        private readonly TranslatorInterface $translator,
+        private readonly OptIn $optIn,
+        private readonly SimpleTokenParser $tokenParser,
+    ) {
+    }
 
     public function __invoke(Request $request): Response
     {
@@ -88,6 +89,7 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
             $this->sendResetEmail($request, $user);
         } catch (\Exception $e) {
             Message::addError($e->getMessage());
+
             return $this->createTemplateResponse($template, $request);
         }
 
@@ -110,11 +112,15 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
 
     private function sendResetEmail(Request $request, UserModel $user): void
     {
-        $optInToken = $this->optIn->create(self::TOKEN_PREFIX, $user->email, ['tl_user' => [$user->id]]);
+        $optInToken = $this->optIn->create(self::TOKEN_PREFIX, $user->email, [
+            'tl_user' => [$user->id]
+        ]);
 
         $resetUrl = $this->router->generate(
             name: ChangePasswordController::NAME,
-            parameters: ['token' => $optInToken->getIdentifier()],
+            parameters: [
+                'token' => $optInToken->getIdentifier()
+            ],
             referenceType: RouterInterface::ABSOLUTE_URL,
         );
 
@@ -128,10 +134,14 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
         );
         $text = $this->translator->trans(
             id: 'MSC.backendLostPassword.messageBodyResetPassword',
-            parameters: ['##reset_url##' => $resetUrl],
+            parameters: [
+                '##reset_url##' => $resetUrl
+            ],
             domain: 'contao_default'
         );
-        $text = $this->tokenParser->parse($text, ['reset_url' => $resetUrl]);
+        $text = $this->tokenParser->parse($text, [
+            'reset_url' => $resetUrl
+        ]);
 
         if (!empty($GLOBALS['TL_ADMIN_EMAIL'])) {
             $from = new Address($GLOBALS['TL_ADMIN_EMAIL'], $GLOBALS['TL_ADMIN_NAME']);
@@ -161,7 +171,7 @@ class RequestPasswordChangeController extends AbstractLostPasswordController
             return false;
         }
 
-        $notification = (int)Config::get('beLostPassword_nc');
+        $notification = (int) Config::get('beLostPassword_nc');
         if ($notification < 1) {
             return false;
         }

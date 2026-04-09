@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @package   Heimrich & Hannot Backend Lost Password Bundle
  * @copyright 2025, Heimrich & Hannot GmbH
  * @license   LGPL-3.0-or-later
  */
@@ -14,9 +13,6 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 class HeimrichHannotBackendLostPasswordBundle extends Bundle
 {
-    /**
-     * {@inheritdoc}
-     */
     #[\Override]
     public function getPath(): string
     {

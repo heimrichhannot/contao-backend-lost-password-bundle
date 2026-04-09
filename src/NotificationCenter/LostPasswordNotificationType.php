@@ -11,8 +11,9 @@ class LostPasswordNotificationType implements NotificationTypeInterface
 {
     public const NAME = 'user_password';
 
-    public function __construct(private readonly TokenDefinitionFactoryInterface $factory)
-    {
+    public function __construct(
+        private readonly TokenDefinitionFactoryInterface $factory
+    ) {
     }
 
     public function getName(): string

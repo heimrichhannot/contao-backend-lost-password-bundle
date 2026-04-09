@@ -37,7 +37,7 @@ abstract class AbstractLostPasswordController extends AbstractController
         $version = InstalledVersions::getPrettyVersion('contao/core-bundle') ?? '';
 
         if (preg_match('/^v?(\d+)\.(\d+)/', $version, $matches)) {
-            $class = 'contao-'.$matches[1].'-'.$matches[2];
+            $class = 'contao-' . $matches[1] . '-' . $matches[2];
         } else {
             $class = 'contao-unknown';
         }

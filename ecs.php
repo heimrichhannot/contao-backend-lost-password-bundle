@@ -12,8 +12,8 @@ use Symplify\EasyCodingStandard\Config\ECSConfig;
 return ECSConfig::configure()
     ->withPaths([
         __DIR__ . '/src',
-        //        __DIR__ . '/contao',
-
+        __DIR__ . '/contao',
+        __DIR__ . '/config',
     ])
 
     // add a single rule

@@ -10,18 +10,17 @@ use Contao\Message;
 use Contao\Template;
 use HeimrichHannot\BackendLostPasswordBundle\Controller\RequestPasswordChangeController;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
-use Symfony\Component\HttpFoundation\UriSigner;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
-use Twig\Environment;
 
 readonly class AddLostPasswordLinkListener
 {
     public function __construct(
         private TranslatorInterface $translator,
-        private array               $bundleConfig,
-        private RouterInterface     $router,
-    ) {}
+        private array $bundleConfig,
+        private RouterInterface $router,
+    ) {
+    }
 
     #[AsEventListener(priority: -192)]
     public function onMenuEvent(MenuEvent $event): void
@@ -73,7 +72,7 @@ readonly class AddLostPasswordLinkListener
         ;
 
         Message::addInfo(
-            '<a'.$attributes.'>'.$this->translator->trans('huh.backend_lost_password.misc.lost_password').'</a>',
+            '<a' . $attributes . '>' . $this->translator->trans('huh.backend_lost_password.misc.lost_password') . '</a>',
             'BE_LOST_PASSWORD'
         );
 
