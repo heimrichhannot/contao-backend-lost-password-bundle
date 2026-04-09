@@ -13,6 +13,7 @@
         "symfony/event-dispatcher": "^6.4 || ^7.0",
         "symfony/http-foundation": "^6.4 || ^7.0",
         "symfony/mailer": "^6.4 || ^7.0",
+        "symfony/rate-limiter": "^6.4 || ^7.0",
         "symfony/translation-contracts": "^1.0 || ^2.0 || ^3.0",
         "twig/twig": "^1.38 || ^2.8 || ^3.0"
     },

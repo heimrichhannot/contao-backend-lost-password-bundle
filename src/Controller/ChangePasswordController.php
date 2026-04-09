@@ -7,6 +7,7 @@
 
 namespace HeimrichHannot\BackendLostPasswordBundle\Controller;
 
+use Contao\BackendUser;
 use Contao\Config;
 use Contao\Controller;
 use Contao\CoreBundle\Framework\ContaoFramework;
@@ -15,13 +16,17 @@ use Contao\CoreBundle\OptIn\OptInTokenInterface;
 use Contao\DC_Table;
 use Contao\FormPassword;
 use Contao\Message;
+use Contao\Password;
 use Contao\StringUtil;
 use Contao\System;
 use Contao\UserModel;
 use Contao\Versions;
 use HeimrichHannot\UtilsBundle\Util\Utils;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
+use Symfony\Component\PasswordHasher\PasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -41,6 +46,7 @@ class ChangePasswordController extends AbstractLostPasswordController
         private readonly OptIn $optIn,
         private readonly TranslatorInterface $translator,
         private readonly Utils $utils,
+        private readonly PasswordHasherFactoryInterface $passwordHasherFactory,
     ) {
     }
 
@@ -100,35 +106,16 @@ class ChangePasswordController extends AbstractLostPasswordController
             return $this->createTemplateResponse($template, $request);
         }
 
-        if ($request->request->get('password') !== $request->request->get('password_confirm')) {
-            Message::addError($GLOBALS['TL_LANG']['ERR']['passwordMatch'] ?? 'Passwords don\'t match.');
+        $newPassword = $request->request->get('password');
+        $passwordHasher = $this->passwordHasherFactory->getPasswordHasher(BackendUser::class);
 
-            return $this->redirect($request->getUri());
+        try {
+            $this->validatePassword($newPassword, $request, $fields, $user, $passwordHasher,);
+        } catch (\Exception $e) {
+            Message::addError($e->getMessage());
+            return $this->createTemplateResponse($template, $request);
         }
 
-        $doNotSubmit = false;
-        foreach ($fields as $objWidget) {
-            // Validate the widget
-            if ($submitted) {
-                $objWidget->validate();
-
-                if ($objWidget->hasErrors()) {
-                    $doNotSubmit = true;
-                }
-            }
-        }
-
-        if ($doNotSubmit) {
-            foreach ($fields as $widget) {
-                if ($widget->hasErrors()) {
-                    Message::addError($widget->getErrorAsString());
-                }
-            }
-
-            return $this->redirect($request->getUri());
-        }
-
-        // Initialize the versioning (see #8301)
         $objVersions = new Versions('tl_user', $user->id);
         $objVersions->setUsername($user->username);
         $objVersions->setEditUrl($this->generateUrl('contao_backend', [
@@ -140,22 +127,26 @@ class ChangePasswordController extends AbstractLostPasswordController
 
         $dc = $this->createDataContainerObject($user);
 
-        $this->utils->dca()->executeCallback(
-            $GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'] ?? null,
-            $passwordField->value,
-            $dc
-        );
+        if (is_array($GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'] ?? null)) {
+            foreach ($GLOBALS['TL_DCA']['tl_user']['fields']['password']['save_callback'] as $callback) {
+                $result = $this->utils->dca()->executeCallback(
+                    $callback,
+                    $newPassword,
+                    $dc
+                );
+                if (is_string($result) && !empty($result)) {
+                    $newPassword = $result;
+                }
+            }
+        }
 
         $user->pwChange = false;
-        $user->password = $passwordField->value;
+        $user->password = $passwordHasher->hash($newPassword);
         $user->save();
 
         $token->confirm();
 
-        // Create a new version
-        if ($GLOBALS['TL_DCA']['tl_user']['config']['enableVersioning'] ?? null) {
-            $objVersions->create();
-        }
+        $objVersions->create();
 
         Message::addConfirmation(
             $GLOBALS['TL_LANG']['MSC']['pw_changed']
@@ -165,7 +156,49 @@ class ChangePasswordController extends AbstractLostPasswordController
         return $this->redirect($this->generateUrl('contao_backend_login'));
     }
 
-    private function createPasswordField(array $field): FormPassword
+    private function validatePassword(
+        #[\SensitiveParameter] string $newPassword,
+        Request $request,
+        array $fields,
+        UserModel $user,
+        PasswordHasherInterface $passwordHasher,
+    ): void
+    {
+        if ($newPassword !== $request->request->get('password_confirm')) {
+            throw new \Exception($this->translator->trans('ERR.passwordMatch', domain: 'contao_default'));
+        }
+
+        $doNotSubmit = false;
+        foreach ($fields as $objWidget) {
+            $objWidget->validate();
+
+            if ($objWidget->hasErrors()) {
+                $doNotSubmit = true;
+            }
+        }
+
+        if ($doNotSubmit) {
+            $errors = '';
+            foreach ($fields as $widget) {
+                if ($widget->hasErrors()) {
+                    $errors .= $widget->getErrorAsString();
+                }
+            }
+            throw new \Exception($errors);
+        }
+
+        if ($newPassword == $user->username)
+        {
+            throw new \Exception($this->translator->trans('ERR.passwordName', domain: 'contao_default'));
+        }
+
+        if ($passwordHasher->verify($user->password, $newPassword))
+        {
+            throw new \Exception($this->translator->trans('MSC.pw_change', domain: 'contao_default'));
+        }
+    }
+
+    private function createPasswordField(array $field): Password
     {
         $field = array_merge([
             'inputType' => 'password',
@@ -175,7 +208,7 @@ class ChangePasswordController extends AbstractLostPasswordController
             ],
         ], $field);
 
-        $objWidget = new FormPassword(FormPassword::getAttributesFromDca($field, $field['name']));
+        $objWidget = new Password(Password::getAttributesFromDca($field, $field['name']));
         $objWidget->storeValues = true;
 
         return $objWidget;
