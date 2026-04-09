@@ -65,23 +65,25 @@ class ChangePasswordController extends AbstractLostPasswordController
         $template->explain = $GLOBALS['TL_LANG']['MSC']['backendLostPassword']['resetExplanation'] ?? null;
         $template->submitButton = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['continue'] ?? '');
 
-        $strFormId = 'tl_reset_password';
-        $submitted = $strFormId === $request->request->get('FORM_SUBMIT');
+        try {
+            $token = $this->fetchToken($request);
+            $user = $this->loadUserFromRequestToken($token);
+        } catch (\Exception $e) {
+            Message::addError($e->getMessage());
 
-        if (!$submitted) {
-            try {
-                $token = $this->fetchToken($request);
-                $user = $this->loadUserFromRequestToken($token);
-            } catch (\Exception $e) {
-                Message::addError($e->getMessage());
+            $template->errorMessage = $this->translator->trans(
+                'MSC.backendLostPassword.resetErrorExplanation',
+                domain: 'contao_default'
+            );
+            $template->fields = [];
+            return $this->createTemplateResponse($template, $request);
+        }
 
-                $template->errorMessage = $this->translator->trans(
-                    'MSC.backendLostPassword.resetErrorExplanation',
-                    domain: 'contao_default'
-                );
-                $template->fields = [];
-                return $this->createTemplateResponse($template, $request);
-            }
+        $submitted = false;
+        $session = $request->getSession();
+        if ($request->isMethod(Request::METHOD_POST) && $request->request->has('FORM_SUBMIT')) {
+            $setPwToken = $session->get('setPasswordToken');
+            $submitted = $request->request->get('FORM_SUBMIT') === $setPwToken;
         }
 
         $passwordField = $this->createPasswordField([
@@ -97,8 +99,17 @@ class ChangePasswordController extends AbstractLostPasswordController
         $fields = [$passwordField, $confirmField];
         $template->fields = $fields;
 
+        $strToken = md5(uniqid(mt_rand(), true));
+        $session->set('setPasswordToken', $strToken);
+        $template->formId = $strToken;
+
         if (!$submitted) {
             return $this->createTemplateResponse($template, $request);
+        }
+
+        if ($request->request->get('password') !== $request->request->get('password_confirm')) {
+            Message::addError($GLOBALS['TL_LANG']['ERR']['passwordMatch'] ?? 'Passwords don\'t match.');
+            return $this->redirect($request->getUri());
         }
 
         $doNotSubmit = false;
@@ -128,13 +139,20 @@ class ChangePasswordController extends AbstractLostPasswordController
             return $this->redirect($request->getUri());
         }
 
-        if ($passwordField->value !== $confirmField->value) {
-            Message::addError($GLOBALS['TL_LANG']['ERR']['passwordMatch'] ?? 'Passwords don\'t match.');
-            return $this->redirect($request->getUri());
-        }
+//        $token->confirm();
 
-        $template->hasError = $doNotSubmit;
-        return $this->createTemplateResponse($template, $request);
+        $user->pwChange = false;
+        $user->password = $passwordField->value;
+        $user->save();
+
+        Message::addConfirmation(
+            $GLOBALS['TL_LANG']['MSC']['pw_changed']
+            ?? 'The password has been changed successfully.'
+        );
+
+        return $this->redirect($this->generateUrl('contao_backend_login'));
+
+
 
 
         $password = $request->request->get('password');
